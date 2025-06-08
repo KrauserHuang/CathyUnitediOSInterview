@@ -34,9 +34,11 @@ class FriendsViewController: UIViewController {
         return stackView
     }()
     private let entryStatus: FriendPageScenario
+    private let viewModel: FriendsViewControllerVM
     
     init(entryStatus: FriendPageScenario) {
         self.entryStatus = entryStatus
+        self.viewModel = FriendsViewControllerVM(scenario: entryStatus)
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -49,6 +51,7 @@ class FriendsViewController: UIViewController {
         
         setupUI()
         setupNavigationBar()
+        loadScenario()
     }
     
     private func setupUI() {
@@ -119,6 +122,17 @@ class FriendsViewController: UIViewController {
     private func setupEmptyStateView() {
         emptyStateView.translatesAutoresizingMaskIntoConstraints = false
         vStackView.addArrangedSubview(emptyStateView)
+    }
+    
+    private func loadScenario() {
+        Task {
+            await viewModel.loadScenario()
+            updateUI()
+        }
+    }
+    
+    private func updateUI() {
+        dump(viewModel.friends)
     }
 }
 
