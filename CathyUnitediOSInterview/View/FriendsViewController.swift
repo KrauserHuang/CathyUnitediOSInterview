@@ -25,7 +25,12 @@ class FriendsViewController: UIViewController {
     
     private let scrollView = UIScrollView()
     private let userInfoHeaderView = UserInfoHeaderView()
-    private let vStackView = UIStackView()
+    private let pagingHeaderView = PagingHeaderView(titles: ["好友", "聊天"])
+    private let vStackView: UIStackView = {
+        let stackView = UIStackView()
+        stackView.axis = .vertical
+        return stackView
+    }()
     private let entryStatus: FriendsVCEntryStatus
     
     init(entryStatus: FriendsVCEntryStatus) {
@@ -71,6 +76,7 @@ class FriendsViewController: UIViewController {
         ])
         
         setupUserInfoView()
+        setupPagingHeaderView()
     }
     
     private func setupNavigationBar() {
@@ -99,5 +105,17 @@ class FriendsViewController: UIViewController {
     private func setupUserInfoView() {
         userInfoHeaderView.translatesAutoresizingMaskIntoConstraints = false
         vStackView.addArrangedSubview(userInfoHeaderView)
+    }
+    
+    private func setupPagingHeaderView() {
+        pagingHeaderView.translatesAutoresizingMaskIntoConstraints = false
+        pagingHeaderView.delegate = self
+        vStackView.addArrangedSubview(pagingHeaderView)
+    }
+}
+
+extension FriendsViewController: PagingHeaderViewDelegate {
+    func pagingHeaderView(_ pagingHeaderView: PagingHeaderView, didSelect index: Int) {
+        print("選擇了索引：\(index)")
     }
 }
