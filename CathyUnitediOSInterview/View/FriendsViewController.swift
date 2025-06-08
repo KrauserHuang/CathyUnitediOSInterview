@@ -7,11 +7,35 @@
 
 import UIKit
 
+enum FriendsVCEntryStatus {
+    case noFriends
+    case friends
+    case friendsWithInvitations
+    
+    var descriptions: String {
+        switch self {
+        case .noFriends: return "無好友畫⾯"
+        case .friends: return "只有好友列表"
+        case .friendsWithInvitations: return "好友列表含邀請"
+        }
+    }
+}
+
 class FriendsViewController: UIViewController {
     
     private let scrollView = UIScrollView()
     private let userInfoHeaderView = UserInfoHeaderView()
     private let vStackView = UIStackView()
+    private let entryStatus: FriendsVCEntryStatus
+    
+    init(entryStatus: FriendsVCEntryStatus) {
+        self.entryStatus = entryStatus
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()

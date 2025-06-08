@@ -66,19 +66,19 @@ class StartingViewController: UIViewController {
     
     @objc
     private func noFriendsButtonTapped(_ sender: UIButton) {
-        let vc = FriendsViewController()
+        let vc = FriendsViewController(entryStatus: .noFriends)
         navigationController?.pushViewController(vc, animated: true)
     }
     
     @objc
     private func friendsButtonTapped(_ sender: UIButton) {
-        let vc = FriendsViewController()
+        let vc = FriendsViewController(entryStatus: .friends)
         navigationController?.pushViewController(vc, animated: true)
     }
     
     @objc
     private func friendsWithInvitationsButtonTapped(_ sender: UIButton) {
-        let vc = FriendsViewController()
+        let vc = FriendsViewController(entryStatus: .friendsWithInvitations)
         navigationController?.pushViewController(vc, animated: true)
     }
 }
