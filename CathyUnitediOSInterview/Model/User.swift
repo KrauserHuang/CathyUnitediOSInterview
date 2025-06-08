@@ -12,8 +12,8 @@ struct UserResponse: Codable {
 }
 
 struct User: Codable {
-    let name: String?   // 姓名
-    let kokoid: String? // kokoID
+    let name: String   // 姓名
+    let kokoid: String // kokoID
 }
 
 /*

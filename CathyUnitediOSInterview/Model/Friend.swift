@@ -16,11 +16,11 @@ struct FriendResponse: Codable {
 }
 
 struct Friend: Codable {
-    let name: String?       // 姓名
-    let status: Int?        // 好友狀態，0:邀請送出，1:已完成，2:邀請中
-    let isTop: String?      // 是否出現星星
-    let fid: String?        // 好友ID
-    let updateDate: String? // 資料更新時間
+    let name: String       // 姓名
+    let status: Int        // 好友狀態，0:邀請送出，1:已完成，2:邀請中
+    let isTop: String      // 是否出現星星
+    let fid: String        // 好友ID
+    let updateDate: String // 資料更新時間
 }
 
 enum FriendStatus: Int {
