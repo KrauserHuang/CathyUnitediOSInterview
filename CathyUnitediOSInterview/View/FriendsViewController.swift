@@ -41,10 +41,14 @@ class FriendsViewController: UIViewController {
         super.viewDidLoad()
         
         setupUI()
+        setupNavigationBar()
     }
     
     private func setupUI() {
         view.backgroundColor = .systemBackground
+        
+        navigationController?.navigationBar.tintColor = .systemPink
+        navigationController?.navigationBar.backgroundColor = .tertiarySystemBackground
         
         scrollView.translatesAutoresizingMaskIntoConstraints = false
         vStackView.translatesAutoresizingMaskIntoConstraints = false
@@ -69,9 +73,31 @@ class FriendsViewController: UIViewController {
         setupUserInfoView()
     }
     
+    private func setupNavigationBar() {
+        let atmButton = UIBarButtonItem(image: UIImage(systemName: "a.circle"), style: .plain, target: self, action: #selector(atmButtonTapped))
+        let dollarButton = UIBarButtonItem(image: UIImage(systemName: "dollarsign.circle"), style: .plain, target: self, action: #selector(dollarButtonTapped))
+        let scanButton = UIBarButtonItem(image: UIImage(systemName: "qrcode.viewfinder"), style: .plain, target: self, action: #selector(scanButtonTapped))
+        navigationItem.leftBarButtonItems = [atmButton, dollarButton]
+        navigationItem.rightBarButtonItem = scanButton
+    }
+    
+    @objc
+    private func atmButtonTapped(_ sender: UIBarButtonItem) {
+        
+    }
+    
+    @objc
+    private func dollarButtonTapped(_ sender: UIBarButtonItem) {
+        
+    }
+    
+    @objc
+    private func scanButtonTapped(_ sender: UIBarButtonItem) {
+        
+    }
+    
     private func setupUserInfoView() {
         userInfoHeaderView.translatesAutoresizingMaskIntoConstraints = false
-        
         vStackView.addArrangedSubview(userInfoHeaderView)
     }
 }
