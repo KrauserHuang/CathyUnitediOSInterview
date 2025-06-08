@@ -46,6 +46,7 @@ class StartingViewController: UIViewController {
         super.viewDidLoad()
         
         setupUI()
+        setupButtonActions()
     }
     
     private func setupUI() {
@@ -55,5 +56,29 @@ class StartingViewController: UIViewController {
             vStackView.centerXAnchor.constraint(equalTo: view.safeAreaLayoutGuide.centerXAnchor),
             vStackView.centerYAnchor.constraint(equalTo: view.safeAreaLayoutGuide.centerYAnchor),
         ])
+    }
+    
+    private func setupButtonActions() {
+        noFriendsButton.addTarget(self, action: #selector(noFriendsButtonTapped(_:)), for: .touchUpInside)
+        friendsButton.addTarget(self, action: #selector(friendsButtonTapped(_:)), for: .touchUpInside)
+        friendsWithInvitationsButton.addTarget(self, action: #selector(friendsWithInvitationsButtonTapped(_:)), for: .touchUpInside)
+    }
+    
+    @objc
+    private func noFriendsButtonTapped(_ sender: UIButton) {
+        let vc = FriendsViewController()
+        navigationController?.pushViewController(vc, animated: true)
+    }
+    
+    @objc
+    private func friendsButtonTapped(_ sender: UIButton) {
+        let vc = FriendsViewController()
+        navigationController?.pushViewController(vc, animated: true)
+    }
+    
+    @objc
+    private func friendsWithInvitationsButtonTapped(_ sender: UIButton) {
+        let vc = FriendsViewController()
+        navigationController?.pushViewController(vc, animated: true)
     }
 }

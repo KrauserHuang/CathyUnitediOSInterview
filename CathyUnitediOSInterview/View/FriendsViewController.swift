@@ -20,6 +20,8 @@ class FriendsViewController: UIViewController {
     }
     
     private func setupUI() {
+        view.backgroundColor = .systemBackground
+        
         scrollView.translatesAutoresizingMaskIntoConstraints = false
         vStackView.translatesAutoresizingMaskIntoConstraints = false
         
