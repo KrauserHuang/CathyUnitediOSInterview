@@ -26,9 +26,11 @@ class FriendsViewController: UIViewController {
     private let scrollView = UIScrollView()
     private let userInfoHeaderView = UserInfoHeaderView()
     private let pagingHeaderView = PagingHeaderView(titles: ["好友", "聊天"])
+    private let emptyStateView = EmptyStateView()
     private let vStackView: UIStackView = {
         let stackView = UIStackView()
         stackView.axis = .vertical
+        stackView.spacing = 5
         return stackView
     }()
     private let entryStatus: FriendsVCEntryStatus
@@ -77,6 +79,7 @@ class FriendsViewController: UIViewController {
         
         setupUserInfoView()
         setupPagingHeaderView()
+        setupEmptyStateView()
     }
     
     private func setupNavigationBar() {
@@ -111,6 +114,11 @@ class FriendsViewController: UIViewController {
         pagingHeaderView.translatesAutoresizingMaskIntoConstraints = false
         pagingHeaderView.delegate = self
         vStackView.addArrangedSubview(pagingHeaderView)
+    }
+    
+    private func setupEmptyStateView() {
+        emptyStateView.translatesAutoresizingMaskIntoConstraints = false
+        vStackView.addArrangedSubview(emptyStateView)
     }
 }
 
