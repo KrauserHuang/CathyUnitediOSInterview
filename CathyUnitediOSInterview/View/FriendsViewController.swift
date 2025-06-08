@@ -7,7 +7,7 @@
 
 import UIKit
 
-enum FriendsVCEntryStatus {
+enum FriendPageScenario: CaseIterable {
     case noFriends
     case friends
     case friendsWithInvitations
@@ -33,9 +33,9 @@ class FriendsViewController: UIViewController {
         stackView.spacing = 5
         return stackView
     }()
-    private let entryStatus: FriendsVCEntryStatus
+    private let entryStatus: FriendPageScenario
     
-    init(entryStatus: FriendsVCEntryStatus) {
+    init(entryStatus: FriendPageScenario) {
         self.entryStatus = entryStatus
         super.init(nibName: nil, bundle: nil)
     }
