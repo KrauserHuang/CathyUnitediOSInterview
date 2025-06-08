@@ -62,12 +62,39 @@ class APIClient {
         self.session = URLSession.shared
     }
     
-    func fetchUserData() async throws -> UserResponse {
-        return try await performRequest(for: .userData)
+    func fetchUserData() async throws -> User? {
+        let response: UserResponse = try await performRequest(for: .userData)
+        let user = response.response.first
+        return user
     }
     
     func fetchFriendList(type: APIEndpoint = .friendList1) async throws -> [Friend] {
         let response: FriendResponse = try await performRequest(for: type)
+        return response.friends
+    }
+    
+    // 3. 同時抓取 friendList1 與 friendList2，並整合
+    func fetchAndMergeFriendLists() async throws -> [Friend] {
+        async let list1: FriendResponse = performRequest(for: .friendList1)
+        async let list2: FriendResponse = performRequest(for: .friendList2)
+        let (response1, response2) = try await (list1, list2)
+        let allFriends = response1.friends + response2.friends
+        
+        // 以 fid 分組，取 updateDate 較新者
+        let merged = Dictionary(grouping: allFriends, by: { $0.fid })
+            .compactMap { $0.value.max(by: { $0.updateDate < $1.updateDate }) }
+        return merged
+    }
+    
+    // 4. 取得 friendListWithInvites
+    func fetchFriendListWithInvites() async throws -> [Friend] {
+        let response: FriendResponse = try await performRequest(for: .friendListWithInvites)
+        return response.friends
+    }
+    
+    // 5. 取得 emptyFriendList
+    func fetchEmptyFriendList() async throws -> [Friend] {
+        let response: FriendResponse = try await performRequest(for: .emptyFriendList)
         return response.friends
     }
     
