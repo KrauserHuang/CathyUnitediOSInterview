@@ -11,7 +11,7 @@ class FriendTableViewCell: UITableViewCell {
     
     private lazy var isTopButton: UIButton = {
         var config = UIButton.Configuration.plain()
-        config.image = UIImage(systemName: "star.fill")
+        config.image = UIImage(systemName: "star.fill")?.withConfiguration(UIImage.SymbolConfiguration(pointSize: 12))
         config.baseForegroundColor = .systemYellow
         config.contentInsets = .zero
         let button = UIButton(configuration: config)
@@ -38,7 +38,7 @@ class FriendTableViewCell: UITableViewCell {
     
     private let nameLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.preferredFont(forTextStyle: .subheadline)
+        label.font = UIFont.preferredFont(forTextStyle: .body)
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
@@ -93,10 +93,17 @@ class FriendTableViewCell: UITableViewCell {
     private lazy var hStackView: UIStackView = {
         let stackView = UIStackView(arrangedSubviews: [isTopButton, avatarImageView, nameLabel, UIView(), transferButton, invitingButton, moreActionButton])
         stackView.axis = .horizontal
-        stackView.spacing = 8
+        stackView.spacing = 10
         stackView.alignment = .center
         stackView.translatesAutoresizingMaskIntoConstraints = false
         return stackView
+    }()
+    
+    private lazy var underlineView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .opaqueSeparator
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
     }()
     
     private var isTop: Bool = false {
@@ -126,6 +133,9 @@ class FriendTableViewCell: UITableViewCell {
     private func setupUI() {
         selectionStyle = .none
         contentView.addSubview(hStackView)
+        contentView.addSubview(underlineView)
+        
+        hStackView.setCustomSpacing(2, after: isTopButton)
         
         let padding: CGFloat = 10
         NSLayoutConstraint.activate([
@@ -135,7 +145,12 @@ class FriendTableViewCell: UITableViewCell {
             hStackView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -padding),
             
             avatarImageView.heightAnchor.constraint(equalToConstant: 50),
-            avatarImageView.widthAnchor.constraint(equalTo: avatarImageView.heightAnchor, multiplier: 1.0)
+            avatarImageView.widthAnchor.constraint(equalTo: avatarImageView.heightAnchor, multiplier: 1.0),
+            
+            underlineView.heightAnchor.constraint(equalToConstant: 1),
+            underlineView.leadingAnchor.constraint(equalTo: nameLabel.leadingAnchor),
+            underlineView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -padding * 2),
+            underlineView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
         ])
     }
     
