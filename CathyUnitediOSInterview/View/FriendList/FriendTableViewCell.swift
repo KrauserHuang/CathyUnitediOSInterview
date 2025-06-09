@@ -126,7 +126,7 @@ class FriendTableViewCell: UITableViewCell {
         super.prepareForReuse()
         
         isTop = false
-        avatarImageView.image = nil
+        avatarImageView.image = UIImage(systemName: "person.crop.circle.fill")
         nameLabel.text = nil
     }
     
