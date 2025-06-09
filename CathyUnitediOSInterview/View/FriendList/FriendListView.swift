@@ -17,10 +17,12 @@ class FriendListView: UIView {
     private lazy var tableView: UITableView = {
         let tableView = UITableView(frame: .zero, style: .plain)
         tableView.register(cell: FriendTableViewCell.self)
+        tableView.register(view: FriendListHeaderView.self)
         tableView.delegate = self
         tableView.rowHeight = UITableView.automaticDimension
         tableView.estimatedRowHeight = 60
         tableView.separatorStyle = .none
+        tableView.sectionHeaderTopPadding = 0
         tableView.translatesAutoresizingMaskIntoConstraints = false
         return tableView
     }()
@@ -68,6 +70,15 @@ class FriendListView: UIView {
 // MARK: - UITableViewDelegate
 
 extension FriendListView: UITableViewDelegate {
+    func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
+        let headerView = tableView.dequeueReusableHeaderFooterView(withIdentifier: FriendListHeaderView.reuseIdentifier) as? FriendListHeaderView
+        return headerView
+    }
+    
+    func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
+        return UITableView.automaticDimension
+    }
+    
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
     }
