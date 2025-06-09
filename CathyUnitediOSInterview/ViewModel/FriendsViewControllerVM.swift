@@ -19,6 +19,15 @@ class FriendsViewControllerVM {
     var friends: [Friend] = []
     var inviteFriends: [Friend] = []
     
+    var searchText: String = ""
+    var filteredFriends: [Friend] {
+        if searchText.isEmpty {
+            return friends
+        } else {
+            return friends.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
+        }
+    }
+    
     init(scenario: FriendPageScenario = .noFriends) {
         self.scenario = scenario
     }
@@ -52,5 +61,9 @@ class FriendsViewControllerVM {
         Task {
             await loadScenario()
         }
+    }
+    
+    func updateSearchText(_ text: String) {
+        searchText = text
     }
 }

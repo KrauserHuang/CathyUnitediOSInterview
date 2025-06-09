@@ -148,6 +148,7 @@ class FriendsViewController: UIViewController {
     private func setupFriendListView() {
         friendListView.translatesAutoresizingMaskIntoConstraints = false
         vStackView.addArrangedSubview(friendListView)
+        friendListView.delegate = self
         
         let heightConstraint = friendListView.heightAnchor.constraint(equalToConstant: 0)
         heightConstraint.isActive = true
@@ -202,6 +203,21 @@ class FriendsViewController: UIViewController {
     }
 }
 
+// MARK: - UISearchBarDelegate & UISearchResultsUpdating
+extension FriendsViewController: FriendListViewDelegate {
+    func friendListView(_ view: FriendListView, didUpdateSearchText searchText: String) {
+        print("搜尋字：", searchText)
+        viewModel.updateSearchText(searchText)
+        friendListView.updateFriends(viewModel.filteredFriends)
+    }
+    
+    func friendListViewDidCancelSearch(_ view: FriendListView) {
+        viewModel.updateSearchText("")
+        friendListView.updateFriends(viewModel.friends)
+    }
+}
+
+// MARK: - PagingHeaderViewDelegate
 extension FriendsViewController: PagingHeaderViewDelegate {
     func pagingHeaderView(_ pagingHeaderView: PagingHeaderView, didSelect index: Int) {
         print("選擇了索引：\(index)")

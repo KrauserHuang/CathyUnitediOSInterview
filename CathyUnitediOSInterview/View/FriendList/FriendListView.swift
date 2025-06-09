@@ -8,6 +8,11 @@
 import Combine
 import UIKit
 
+protocol FriendListViewDelegate: AnyObject {
+    func friendListView(_ view: FriendListView, didUpdateSearchText searchText: String)
+    func friendListViewDidCancelSearch(_ view: FriendListView)
+}
+
 class FriendListView: UIView {
     
     enum Section {
@@ -33,6 +38,7 @@ class FriendListView: UIView {
     
     @Published var height: CGFloat = 0
     private var subscriptions: Set<AnyCancellable> = []
+    weak var delegate: FriendListViewDelegate?
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -71,7 +77,8 @@ class FriendListView: UIView {
 
 extension FriendListView: UITableViewDelegate {
     func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
-        let headerView = tableView.dequeueReusableHeaderFooterView(withIdentifier: FriendListHeaderView.reuseIdentifier) as? FriendListHeaderView
+        guard let headerView = tableView.dequeueReusableHeaderFooterView(withIdentifier: FriendListHeaderView.reuseIdentifier) as? FriendListHeaderView else { return nil }
+        headerView.delegate = self
         return headerView
     }
     
@@ -106,4 +113,19 @@ extension FriendListView {
     func configure(with friends: [Friend]) {
         updateSnapshot(with: friends)
     }
+    
+    func updateFriends(_ friends: [Friend]) {
+        updateSnapshot(with: friends)
+    }
 }
+
+extension FriendListView: FriendListHeaderViewDelegate {
+    func friendListHeaderView(_ headerView: FriendListHeaderView, didUpdateSearchText searchText: String) {
+        delegate?.friendListView(self, didUpdateSearchText: searchText)
+    }
+    
+    func friendListHeaderViewDidCancelSearch(_ headerView: FriendListHeaderView) {
+        delegate?.friendListViewDidCancelSearch(self)
+    }
+}
+
