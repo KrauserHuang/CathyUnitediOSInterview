@@ -21,6 +21,15 @@ struct Friend: Codable, Hashable {
     let isTop: String      // 是否出現星星
     let fid: String        // 好友ID
     let updateDate: String // 資料更新時間
+    
+    var friendStatus: FriendStatus {
+        FriendStatus(rawValue: status) ?? .completed
+    }
+    var starred: Bool { isTop == "1" }
+    
+    enum CodingKeys: String, CodingKey {
+        case name, status, isTop, fid, updateDate
+    }
 }
 
 enum FriendStatus: Int {

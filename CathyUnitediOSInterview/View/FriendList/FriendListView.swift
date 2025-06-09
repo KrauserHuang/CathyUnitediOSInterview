@@ -5,6 +5,7 @@
 //  Created by Tai Chin Huang on 2025/6/8.
 //
 
+import Combine
 import UIKit
 
 class FriendListView: UIView {
@@ -16,6 +17,9 @@ class FriendListView: UIView {
     private lazy var tableView: UITableView = {
         let tableView = UITableView(frame: .zero, style: .plain)
         tableView.register(cell: FriendTableViewCell.self)
+        tableView.delegate = self
+        tableView.rowHeight = UITableView.automaticDimension
+        tableView.estimatedRowHeight = 60
         tableView.translatesAutoresizingMaskIntoConstraints = false
         return tableView
     }()
@@ -24,10 +28,14 @@ class FriendListView: UIView {
     typealias Snapshot = NSDiffableDataSourceSnapshot<Section, Friend>
     private lazy var dataSource = makeDataSource()
     
+    @Published var height: CGFloat = 0
+    private var subscriptions: Set<AnyCancellable> = []
+    
     override init(frame: CGRect) {
         super.init(frame: frame)
         
         setupUI()
+        setupBindings()
     }
     
     required init?(coder: NSCoder) {
@@ -35,18 +43,36 @@ class FriendListView: UIView {
     }
     
     private func setupUI() {
+        backgroundColor = .systemBackground
         translatesAutoresizingMaskIntoConstraints = false
         addSubview(tableView)
         
         NSLayoutConstraint.activate([
             tableView.topAnchor.constraint(equalTo: topAnchor),
-            tableView.bottomAnchor.constraint(equalTo: bottomAnchor),
             tableView.leadingAnchor.constraint(equalTo: leadingAnchor),
-            tableView.trailingAnchor.constraint(equalTo: trailingAnchor)
+            tableView.trailingAnchor.constraint(equalTo: trailingAnchor),
+            tableView.bottomAnchor.constraint(equalTo: bottomAnchor),
         ])
+    }
+    
+    private func setupBindings() {
+        tableView.publisher(for: \.contentSize)
+            .map(\.height)
+            .removeDuplicates()
+            .assign(to: \.height, on: self)
+            .store(in: &subscriptions)
     }
 }
 
+// MARK: - UITableViewDelegate
+
+extension FriendListView: UITableViewDelegate {
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: true)
+    }
+}
+
+// MARK: - Data Source
 extension FriendListView {
     private func makeDataSource() -> DataSource {
         let dataSource = DataSource(tableView: tableView) { tableView, indexPath, friend in
@@ -66,7 +92,6 @@ extension FriendListView {
     }
     
     func configure(with friends: [Friend]) {
-        print("有到這？？？？？")
         updateSnapshot(with: friends)
     }
 }

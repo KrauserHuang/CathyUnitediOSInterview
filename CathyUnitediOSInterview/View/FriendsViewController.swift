@@ -5,6 +5,7 @@
 //  Created by Tai Chin Huang on 2025/6/8.
 //
 
+import Combine
 import UIKit
 
 enum FriendPageScenario: CaseIterable {
@@ -34,8 +35,12 @@ class FriendsViewController: UIViewController {
         stackView.spacing = 5
         return stackView
     }()
+    
     private let entryStatus: FriendPageScenario
     private let viewModel: FriendsViewControllerVM
+    
+    private var friendListHeightConstraint: NSLayoutConstraint?
+    private var subscriptions: Set<AnyCancellable> = []
     
     init(entryStatus: FriendPageScenario) {
         self.entryStatus = entryStatus
@@ -53,6 +58,7 @@ class FriendsViewController: UIViewController {
         setupUI()
         setupNavigationBar()
         loadScenario()
+        setupBindings()
     }
     
     private func setupUI() {
@@ -130,6 +136,10 @@ class FriendsViewController: UIViewController {
     private func setupFriendListView() {
         friendListView.translatesAutoresizingMaskIntoConstraints = false
         vStackView.addArrangedSubview(friendListView)
+        
+        let heightConstraint = friendListView.heightAnchor.constraint(equalToConstant: 0)
+        heightConstraint.isActive = true
+        friendListHeightConstraint = heightConstraint
     }
     
     private func loadScenario() {
@@ -140,9 +150,26 @@ class FriendsViewController: UIViewController {
     }
     
     private func updateUI() {
-        dump(viewModel.friends)
-        emptyStateView.isHidden = !viewModel.friends.isEmpty
-        friendListView.configure(with: viewModel.friends)
+        let hasFriends = !viewModel.friends.isEmpty
+        emptyStateView.isHidden = hasFriends
+        friendListView.isHidden = !hasFriends
+        
+        if hasFriends {
+            friendListView.configure(with: viewModel.friends)
+            friendListView.setNeedsLayout()
+            friendListView.layoutIfNeeded()
+        }
+    }
+    
+    private func setupBindings() {
+        friendListView.$height
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] height in
+                guard let self else { return }
+                friendListHeightConstraint?.constant = height
+                view.layoutIfNeeded()
+            }
+            .store(in: &subscriptions)
     }
 }
 
