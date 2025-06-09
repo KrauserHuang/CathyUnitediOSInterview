@@ -124,6 +124,7 @@ class FriendTableViewCell: UITableViewCell {
     }
     
     private func setupUI() {
+        selectionStyle = .none
         contentView.addSubview(hStackView)
         
         let padding: CGFloat = 10

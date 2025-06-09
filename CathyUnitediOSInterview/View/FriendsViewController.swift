@@ -26,6 +26,7 @@ class FriendsViewController: UIViewController {
     
     private let scrollView = UIScrollView()
     private let userInfoHeaderView = UserInfoHeaderView()
+    private let friendInvitationListView = FriendInvitationListView()
     private let pagingHeaderView = PagingHeaderView(titles: ["好友", "聊天"])
     private let emptyStateView = EmptyStateView()
     private let friendListView = FriendListView()
@@ -39,6 +40,7 @@ class FriendsViewController: UIViewController {
     private let entryStatus: FriendPageScenario
     private let viewModel: FriendsViewControllerVM
     
+    private var friendInvitationListHeightConstraint: NSLayoutConstraint?
     private var friendListHeightConstraint: NSLayoutConstraint?
     private var subscriptions: Set<AnyCancellable> = []
     
@@ -88,6 +90,7 @@ class FriendsViewController: UIViewController {
         ])
         
         setupUserInfoView()
+        setupFriendInvitationListView()
         setupPagingHeaderView()
         setupEmptyStateView()
         setupFriendListView()
@@ -121,6 +124,15 @@ class FriendsViewController: UIViewController {
         vStackView.addArrangedSubview(userInfoHeaderView)
     }
     
+    private func setupFriendInvitationListView() {
+        friendInvitationListView.translatesAutoresizingMaskIntoConstraints = false
+        vStackView.addArrangedSubview(friendInvitationListView)
+        
+        let heightConstraint = friendInvitationListView.heightAnchor.constraint(equalToConstant: 0)
+        heightConstraint.isActive = true
+        friendInvitationListHeightConstraint = heightConstraint
+    }
+    
     private func setupPagingHeaderView() {
         pagingHeaderView.translatesAutoresizingMaskIntoConstraints = false
         pagingHeaderView.delegate = self
@@ -150,9 +162,17 @@ class FriendsViewController: UIViewController {
     }
     
     private func updateUI() {
-        let hasFriends = !viewModel.friends.isEmpty
-        emptyStateView.isHidden = hasFriends
-        friendListView.isHidden = !hasFriends
+        let hasInviteFriends                = !viewModel.inviteFriends.isEmpty
+        let hasFriends                      = !viewModel.friends.isEmpty
+        friendInvitationListView.isHidden   = !hasInviteFriends
+        emptyStateView.isHidden             = hasFriends
+        friendListView.isHidden             = !hasFriends
+        
+        if hasInviteFriends {
+            friendInvitationListView.configure(with: viewModel.inviteFriends)
+            friendInvitationListView.setNeedsLayout()
+            friendInvitationListView.layoutIfNeeded()
+        }
         
         if hasFriends {
             friendListView.configure(with: viewModel.friends)
@@ -162,6 +182,15 @@ class FriendsViewController: UIViewController {
     }
     
     private func setupBindings() {
+        friendInvitationListView.$height
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] height in
+                guard let self else { return }
+                friendInvitationListHeightConstraint?.constant = height
+                view.layoutIfNeeded()
+            }
+            .store(in: &subscriptions)
+        
         friendListView.$height
             .receive(on: DispatchQueue.main)
             .sink { [weak self] height in
