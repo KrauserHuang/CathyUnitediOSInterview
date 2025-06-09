@@ -15,7 +15,7 @@ struct FriendResponse: Codable {
     }
 }
 
-struct Friend: Codable {
+struct Friend: Codable, Hashable {
     let name: String       // 姓名
     let status: Int        // 好友狀態，0:邀請送出，1:已完成，2:邀請中
     let isTop: String      // 是否出現星星

@@ -27,6 +27,7 @@ class FriendsViewController: UIViewController {
     private let userInfoHeaderView = UserInfoHeaderView()
     private let pagingHeaderView = PagingHeaderView(titles: ["好友", "聊天"])
     private let emptyStateView = EmptyStateView()
+    private let friendListView = FriendListView()
     private let vStackView: UIStackView = {
         let stackView = UIStackView()
         stackView.axis = .vertical
@@ -83,6 +84,7 @@ class FriendsViewController: UIViewController {
         setupUserInfoView()
         setupPagingHeaderView()
         setupEmptyStateView()
+        setupFriendListView()
     }
     
     private func setupNavigationBar() {
@@ -122,6 +124,12 @@ class FriendsViewController: UIViewController {
     private func setupEmptyStateView() {
         emptyStateView.translatesAutoresizingMaskIntoConstraints = false
         vStackView.addArrangedSubview(emptyStateView)
+        emptyStateView.isHidden = true
+    }
+    
+    private func setupFriendListView() {
+        friendListView.translatesAutoresizingMaskIntoConstraints = false
+        vStackView.addArrangedSubview(friendListView)
     }
     
     private func loadScenario() {
@@ -133,6 +141,8 @@ class FriendsViewController: UIViewController {
     
     private func updateUI() {
         dump(viewModel.friends)
+        emptyStateView.isHidden = !viewModel.friends.isEmpty
+        friendListView.configure(with: viewModel.friends)
     }
 }
 
