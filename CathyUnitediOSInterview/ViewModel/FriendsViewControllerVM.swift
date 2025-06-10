@@ -5,19 +5,19 @@
 //  Created by Tai Chin Huang on 2025/6/8.
 //
 
+import Combine
 import Foundation
 import Observation
 
-@Observable
-class FriendsViewControllerVM {
+class FriendsViewControllerVM: ObservableObject {
     
     var scenario: FriendPageScenario
-    var isLoading: Bool = false
+    @Published var isLoading: Bool = false
     var errorMessage: String? = nil
     
-    var user: User?
-    var friends: [Friend] = []
-    var inviteFriends: [Friend] = []
+    @Published var user: User?
+    @Published var friends: [Friend] = []
+    @Published var inviteFriends: [Friend] = []
     
     var searchText: String = ""
     var filteredFriends: [Friend] {
@@ -30,6 +30,9 @@ class FriendsViewControllerVM {
     
     init(scenario: FriendPageScenario = .noFriends) {
         self.scenario = scenario
+        Task {
+            await loadScenario()
+        }
     }
     
     func loadScenario() async {
@@ -53,6 +56,7 @@ class FriendsViewControllerVM {
                 friends = try await APIClient.shared.fetchAndMergeFriendLists()
                 inviteFriends = try await APIClient.shared.fetchFriendListWithInvites()
             }
+            isLoading = false
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -67,5 +71,15 @@ class FriendsViewControllerVM {
     
     func updateSearchText(_ text: String) {
         searchText = text
+    }
+    
+    func reloadFriendList() async {
+        isLoading = true
+        do {
+            friends = try await APIClient.shared.fetchAndMergeFriendLists()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+        isLoading = false
     }
 }

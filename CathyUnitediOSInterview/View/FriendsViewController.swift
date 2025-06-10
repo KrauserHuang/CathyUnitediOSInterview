@@ -24,7 +24,13 @@ enum FriendPageScenario: CaseIterable {
 
 class FriendsViewController: UIViewController {
     
-    private let scrollView = UIScrollView()
+    private let scrollView: UIScrollView = {
+        let scrollView = UIScrollView()
+        scrollView.refreshControl = UIRefreshControl()
+        return scrollView
+    }()
+    
+    private let refreshControl = UIRefreshControl()
     private let userInfoHeaderView = UserInfoHeaderView()
     private let friendInvitationListView = FriendInvitationListView()
     private let pagingHeaderView = PagingHeaderView(titles: ["好友", "聊天"])
@@ -59,7 +65,6 @@ class FriendsViewController: UIViewController {
         
         setupUI()
         setupNavigationBar()
-        loadScenario()
         setupBindings()
     }
     
@@ -68,6 +73,9 @@ class FriendsViewController: UIViewController {
         
         scrollView.translatesAutoresizingMaskIntoConstraints = false
         vStackView.translatesAutoresizingMaskIntoConstraints = false
+        
+        refreshControl.addTarget(self, action: #selector(refreshFriendList(_:)), for: .valueChanged)
+        scrollView.refreshControl = refreshControl
         
         view.addSubview(scrollView)
         scrollView.addSubview(vStackView)
@@ -168,10 +176,10 @@ class FriendsViewController: UIViewController {
         friendListHeightConstraint = heightConstraint
     }
     
-    private func loadScenario() {
+    @objc
+    private func refreshFriendList(_ sender: UIRefreshControl) {
         Task {
-            await viewModel.loadScenario()
-            updateUI()
+            await viewModel.reloadFriendList()
         }
     }
     
@@ -196,6 +204,35 @@ class FriendsViewController: UIViewController {
     }
     
     private func setupBindings() {
+        viewModel.$inviteFriends
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] inviteFriends in
+                guard let self else { return }
+                friendInvitationListView.configure(with: inviteFriends)
+                refreshControl.endRefreshing()
+            }
+            .store(in: &subscriptions)
+        
+        viewModel.$friends
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] friends in
+                guard let self else { return }
+                friendListView.updateFriends(friends)
+                refreshControl.endRefreshing()
+            }
+            .store(in: &subscriptions)
+            
+        viewModel.$isLoading
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] isLoading in
+                guard let self else { return }
+                if !isLoading {
+                    refreshControl.endRefreshing()
+                }
+                updateUI()
+            }
+            .store(in: &subscriptions)
+        
         friendInvitationListView.$height
             .receive(on: DispatchQueue.main)
             .sink { [weak self] height in
