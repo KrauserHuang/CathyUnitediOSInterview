@@ -43,11 +43,13 @@ class FriendsViewControllerVM {
             user = try await APIClient.shared.fetchUserData()
             
             switch scenario {
-            case .noFriends:
+            case .noFriends:                // 無資料邀請/好友列表
                 friends = try await APIClient.shared.fetchEmptyFriendList()
-            case .friends:
+                
+            case .friends:                  // 好友列表
                 friends = try await APIClient.shared.fetchAndMergeFriendLists()
-            case .friendsWithInvitations:
+                
+            case .friendsWithInvitations:   // 好友列表含邀請列表
                 friends = try await APIClient.shared.fetchAndMergeFriendLists()
                 inviteFriends = try await APIClient.shared.fetchFriendListWithInvites()
             }
