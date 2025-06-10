@@ -123,7 +123,7 @@ class FriendTableViewCell: UITableViewCell {
         super.prepareForReuse()
         
         isTop = false
-        avatarImageView.image = nil
+        avatarImageView.image = UIImage(resource: .imgFriendsList).withConfiguration(UIImage.SymbolConfiguration(pointSize: 40))
         nameLabel.text = nil
     }
     
