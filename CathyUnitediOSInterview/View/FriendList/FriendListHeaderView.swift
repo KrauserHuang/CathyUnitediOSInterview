@@ -31,10 +31,8 @@ class FriendListHeaderView: UITableViewHeaderFooterView {
     
     private lazy var addFriendButton: UIButton = {
         var config = UIButton.Configuration.plain()
-        config.image = UIImage(systemName: "person.crop.circle.fill.badge.plus")?.withConfiguration(UIImage.SymbolConfiguration(pointSize: 18))
-        config.baseForegroundColor = .systemPink
+        config.image = UIImage(resource: .icBtnAddFriends).withConfiguration(UIImage.SymbolConfiguration(pointSize: 24))
         config.background.backgroundColor = .clear
-        config.buttonSize = .large
         config.contentInsets = .zero
         let button = UIButton(configuration: config)
         button.translatesAutoresizingMaskIntoConstraints = false
@@ -44,7 +42,8 @@ class FriendListHeaderView: UITableViewHeaderFooterView {
     private lazy var hStackView: UIStackView = {
         let stackView = UIStackView(arrangedSubviews: [searchBar, addFriendButton])
         stackView.axis = .horizontal
-        stackView.spacing = 10
+        stackView.spacing = 15
+        stackView.alignment = .center
         stackView.translatesAutoresizingMaskIntoConstraints = false
         return stackView
     }()
@@ -68,8 +67,8 @@ class FriendListHeaderView: UITableViewHeaderFooterView {
         let padding: CGFloat = 10
         NSLayoutConstraint.activate([
             hStackView.topAnchor.constraint(equalTo: safeAreaLayoutGuide.topAnchor, constant: padding / 2),
-            hStackView.leadingAnchor.constraint(equalTo: safeAreaLayoutGuide.leadingAnchor, constant: padding * 2),
-            hStackView.trailingAnchor.constraint(equalTo: safeAreaLayoutGuide.trailingAnchor, constant: -padding * 2),
+            hStackView.leadingAnchor.constraint(equalTo: safeAreaLayoutGuide.leadingAnchor, constant: 30),
+            hStackView.trailingAnchor.constraint(equalTo: safeAreaLayoutGuide.trailingAnchor, constant: -30),
             hStackView.bottomAnchor.constraint(equalTo: safeAreaLayoutGuide.bottomAnchor, constant: -padding / 2),
         ])
     }

@@ -11,8 +11,9 @@ class UserInfoHeaderView: UIView {
     
     private lazy var usernameLabel: UILabel = {
         let label = UILabel()
-        label.text = "紫瞵"
-        label.font = UIFont.preferredFont(forTextStyle: .headline)
+        label.text = "紫晽"
+        label.textColor = .label
+        label.font = UIFont.systemFont(ofSize: 17, weight: .medium)
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
@@ -20,14 +21,14 @@ class UserInfoHeaderView: UIView {
     private lazy var kokoIdButton: UIButton = {
         var config = UIButton.Configuration.plain()
         config.title = "設定 KOKO ID"
-        config.image = UIImage(systemName: "chevron.forward")
+        config.image = UIImage(resource: .icInfoBackDeepGray).withConfiguration(UIImage.SymbolConfiguration(pointSize: 18))
         config.imagePlacement = .trailing
         config.imagePadding = 8
         config.baseForegroundColor = .secondaryLabel
         config.contentInsets = .zero
         config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
             var outgoing = incoming
-            outgoing.font = UIFont.preferredFont(forTextStyle: .subheadline)
+            outgoing.font = UIFont.systemFont(ofSize: 13)
             return outgoing
         }
         let button = UIButton(configuration: config)
@@ -47,9 +48,8 @@ class UserInfoHeaderView: UIView {
     
     private lazy var userImageView: UIImageView = {
         let imageView = UIImageView()
-        imageView.image = UIImage(systemName: "person.circle.fill")
+        imageView.image = UIImage(resource: .imgFriendsFemaleDefault).withConfiguration(UIImage.SymbolConfiguration(pointSize: 54))
         imageView.contentMode = .scaleAspectFill
-        imageView.layer.cornerRadius = 30
         imageView.clipsToBounds = true
         imageView.translatesAutoresizingMaskIntoConstraints = false
         return imageView
@@ -80,12 +80,9 @@ class UserInfoHeaderView: UIView {
         let padding: CGFloat = 16
         NSLayoutConstraint.activate([
             hStackView.topAnchor.constraint(equalTo: topAnchor, constant: padding),
-            hStackView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: padding),
-            hStackView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -padding),
+            hStackView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 30),
+            hStackView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -30),
             hStackView.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -padding),
-            
-            userImageView.widthAnchor.constraint(equalToConstant: 60),
-            userImageView.heightAnchor.constraint(equalToConstant: 60)
         ])
     }
 }

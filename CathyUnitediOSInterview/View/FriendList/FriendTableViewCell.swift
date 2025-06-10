@@ -11,15 +11,14 @@ class FriendTableViewCell: UITableViewCell {
     
     private lazy var isTopButton: UIButton = {
         var config = UIButton.Configuration.plain()
-        config.image = UIImage(systemName: "star.fill")?.withConfiguration(UIImage.SymbolConfiguration(pointSize: 12))
-        config.baseForegroundColor = .systemYellow
+        config.image = UIImage(resource: .icFriendsStar).withConfiguration(UIImage.SymbolConfiguration(pointSize: 14))
         config.contentInsets = .zero
         let button = UIButton(configuration: config)
         button.configurationUpdateHandler = { [weak self] button in
             guard let self else { return }
             var config = button.configuration
-            config?.baseForegroundColor = isTop ? .systemYellow : .white
             button.configuration = config
+            button.alpha = isTop ? 1 : 0
         }
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
@@ -27,9 +26,9 @@ class FriendTableViewCell: UITableViewCell {
     
     private lazy var avatarImageView: UIImageView = {
         let imageView = UIImageView()
-        imageView.image = UIImage(systemName: "person.crop.circle.fill")
+        imageView.image = UIImage(resource: .imgFriendsList).withConfiguration(UIImage.SymbolConfiguration(pointSize: 40))
         imageView.contentMode = .scaleAspectFill
-        imageView.layer.cornerRadius = 25
+//        imageView.layer.cornerRadius = 20
         imageView.clipsToBounds = true
         imageView.translatesAutoresizingMaskIntoConstraints = false
         imageView.tintColor = .lightGray
@@ -38,7 +37,7 @@ class FriendTableViewCell: UITableViewCell {
     
     private let nameLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.preferredFont(forTextStyle: .body)
+        label.font = UIFont.systemFont(ofSize: 16)
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
@@ -46,14 +45,14 @@ class FriendTableViewCell: UITableViewCell {
     private lazy var transferButton: UIButton = {
         var config = UIButton.Configuration.bordered()
         config.title = "轉帳"
-        config.baseForegroundColor = .systemPink
-        config.background.strokeColor = .systemPink
-        config.contentInsets = NSDirectionalEdgeInsets(top: 4, leading: 8, bottom: 4, trailing: 8)
+        config.baseForegroundColor = .hotPink
+        config.background.strokeColor = .hotPink
+        config.contentInsets = NSDirectionalEdgeInsets(top: 2, leading: 9, bottom: 2, trailing: 9)
         config.background.backgroundColor = .white
-        config.cornerStyle = .small
+        config.background.cornerRadius = 2
         config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { outgoing in
             var incoming = outgoing
-            incoming.font = UIFont.preferredFont(forTextStyle: .caption1)
+            incoming.font = UIFont.systemFont(ofSize: 14)
             return outgoing
         }
         let button = UIButton(configuration: config)
@@ -64,14 +63,14 @@ class FriendTableViewCell: UITableViewCell {
     private lazy var invitingButton: UIButton = {
         var config = UIButton.Configuration.bordered()
         config.title = "邀請中"
-        config.baseForegroundColor = .secondaryLabel
-        config.background.strokeColor = .secondaryLabel
-        config.contentInsets = NSDirectionalEdgeInsets(top: 4, leading: 8, bottom: 4, trailing: 8)
+        config.baseForegroundColor = .lightGray
+        config.background.strokeColor = .pinkishGrey
+        config.contentInsets = NSDirectionalEdgeInsets(top: 2, leading: 9, bottom: 2, trailing: 9)
         config.background.backgroundColor = .white
-        config.cornerStyle = .small
+        config.background.cornerRadius = 2
         config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { outgoing in
             var incoming = outgoing
-            incoming.font = UIFont.preferredFont(forTextStyle: .caption1)
+            incoming.font = UIFont.systemFont(ofSize: 14)
             return outgoing
         }
         let button = UIButton(configuration: config)
@@ -82,8 +81,8 @@ class FriendTableViewCell: UITableViewCell {
     
     private lazy var moreActionButton: UIButton = {
         var config = UIButton.Configuration.plain()
-        config.image = UIImage(systemName: "ellipsis")
-        config.baseForegroundColor = .systemGray
+        config.image = UIImage(resource: .icFriendsMore)
+//        config.baseForegroundColor = .systemGray
         config.contentInsets = .zero
         let button = UIButton(configuration: config)
         button.translatesAutoresizingMaskIntoConstraints = false
@@ -135,21 +134,21 @@ class FriendTableViewCell: UITableViewCell {
         contentView.addSubview(hStackView)
         contentView.addSubview(underlineView)
         
-        hStackView.setCustomSpacing(2, after: isTopButton)
+        hStackView.setCustomSpacing(6, after: isTopButton)
+        hStackView.setCustomSpacing(15, after: avatarImageView)
         
         let padding: CGFloat = 10
         NSLayoutConstraint.activate([
             hStackView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: padding),
-            hStackView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: padding * 2),
-            hStackView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -padding * 2),
+            hStackView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: padding * 3),
+            hStackView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -padding * 3),
             hStackView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -padding),
             
-            avatarImageView.heightAnchor.constraint(equalToConstant: 50),
             avatarImageView.widthAnchor.constraint(equalTo: avatarImageView.heightAnchor, multiplier: 1.0),
             
             underlineView.heightAnchor.constraint(equalToConstant: 1),
             underlineView.leadingAnchor.constraint(equalTo: nameLabel.leadingAnchor),
-            underlineView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -padding * 2),
+            underlineView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -padding * 3),
             underlineView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
         ])
     }

@@ -11,7 +11,7 @@ class EmptyStateView: UIView {
     
     private let emptyStateImageView: UIImageView = {
         let imageView = UIImageView()
-        imageView.image = UIImage(resource: .emptyState)
+        imageView.image = UIImage(resource: .imgFriendsEmpty)
         imageView.contentMode = .scaleAspectFit
         imageView.translatesAutoresizingMaskIntoConstraints = false
         return imageView
@@ -20,7 +20,8 @@ class EmptyStateView: UIView {
     private let emptyStateTitleLabel: UILabel = {
         let label = UILabel()
         label.text = "就從加好友開始吧 ：）"
-        label.font = UIFont.preferredFont(forTextStyle: .title2)
+        label.font = UIFont.systemFont(ofSize: 21)
+        label.textColor = .label
         label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
@@ -29,7 +30,7 @@ class EmptyStateView: UIView {
     private let emptyStateSubTitleLabel: UILabel = {
         let label = UILabel()
         label.text = "與好友們一起用 KOKO 聊起來！\n還能互相收付款、發紅包喔：）"
-        label.font = UIFont.preferredFont(forTextStyle: .subheadline)
+        label.font = UIFont.systemFont(ofSize: 14)
         label.textColor = .secondaryLabel
         label.textAlignment = .center
         label.numberOfLines = 0
@@ -40,10 +41,10 @@ class EmptyStateView: UIView {
     private lazy var addFriendButton: UIButton = {
         var config = UIButton.Configuration.plain()
         config.title = "加好友"
-        config.image = UIImage(systemName: "face.smiling.inverse")
+        config.image = UIImage(resource: .icAddFriendWhite).withConfiguration(UIImage.SymbolConfiguration(pointSize: 24))
         config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
             var outgoing = incoming
-            outgoing.font = UIFont.preferredFont(forTextStyle: .headline)
+            outgoing.font = UIFont.systemFont(ofSize: 16, weight: .medium)
             return outgoing
         }
         config.imagePlacement = .trailing
@@ -60,7 +61,7 @@ class EmptyStateView: UIView {
     private lazy var notificationLabel: UILabel = {
         let label = UILabel()
         label.text = "幫助好友更快找到你？"
-        label.font = UIFont.preferredFont(forTextStyle: .subheadline)
+        label.font = UIFont.systemFont(ofSize: 13)
         label.textColor = .secondaryLabel
         label.textAlignment = .right
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -69,14 +70,17 @@ class EmptyStateView: UIView {
     
     private lazy var setupIDButton: UIButton = {
         var config = UIButton.Configuration.plain()
-        config.title = "設定 KOKO ID"
-        config.baseForegroundColor = .systemPink
+        config.baseForegroundColor = .hotPink
         config.contentInsets = .zero
-        config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
-            var outgoing = incoming
-            outgoing.font = UIFont.preferredFont(forTextStyle: .subheadline)
-            return outgoing
-        }
+        let attributedTitle = NSAttributedString(
+            string: "設定 KOKO ID",
+            attributes: [
+                .font: UIFont.systemFont(ofSize: 13),
+                .foregroundColor: UIColor.hotPink,
+                .underlineStyle: NSUnderlineStyle.single.rawValue
+            ]
+        )
+        config.attributedTitle = AttributedString(attributedTitle)
         let button = UIButton(configuration: config)
         button.translatesAutoresizingMaskIntoConstraints = false
         return button

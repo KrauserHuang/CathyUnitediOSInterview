@@ -66,9 +66,6 @@ class FriendsViewController: UIViewController {
     private func setupUI() {
         view.backgroundColor = .systemBackground
         
-        navigationController?.navigationBar.tintColor = .systemPink
-        navigationController?.navigationBar.backgroundColor = .tertiarySystemBackground
-        
         scrollView.translatesAutoresizingMaskIntoConstraints = false
         vStackView.translatesAutoresizingMaskIntoConstraints = false
         
@@ -97,25 +94,41 @@ class FriendsViewController: UIViewController {
     }
     
     private func setupNavigationBar() {
-        let atmButton = UIBarButtonItem(image: UIImage(systemName: "a.circle"), style: .plain, target: self, action: #selector(atmButtonTapped))
-        let dollarButton = UIBarButtonItem(image: UIImage(systemName: "dollarsign.circle"), style: .plain, target: self, action: #selector(dollarButtonTapped))
-        let scanButton = UIBarButtonItem(image: UIImage(systemName: "qrcode.viewfinder"), style: .plain, target: self, action: #selector(scanButtonTapped))
-        navigationItem.leftBarButtonItems = [atmButton, dollarButton]
-        navigationItem.rightBarButtonItem = scanButton
+        let navWithdrawButton = UIBarButtonItem(
+            image: UIImage(resource: .icNavPinkWithdraw),
+            style: .plain,
+            target: self,
+            action: #selector(navWithdrawButtonTapped)
+        )
+        let navTransferButton = UIBarButtonItem(
+            image: UIImage(resource: .icNavPinkTransfer),
+            style: .plain,
+            target: self,
+            action: #selector(navTransferButtonTapped)
+        )
+        let navScanButton = UIBarButtonItem(
+            image: UIImage(resource: .icNavPinkScan),
+            style: .plain,
+            target: self,
+            action: #selector(navScanButtonTapped)
+        )
+        navigationItem.leftBarButtonItems = [navWithdrawButton, navTransferButton]
+        navigationItem.rightBarButtonItem = navScanButton
+        navigationController?.navigationBar.tintColor = .hotPink
     }
     
     @objc
-    private func atmButtonTapped(_ sender: UIBarButtonItem) {
+    private func navWithdrawButtonTapped(_ sender: UIBarButtonItem) {
+        navigationController?.popViewController(animated: true)
+    }
+    
+    @objc
+    private func navTransferButtonTapped(_ sender: UIBarButtonItem) {
         
     }
     
     @objc
-    private func dollarButtonTapped(_ sender: UIBarButtonItem) {
-        
-    }
-    
-    @objc
-    private func scanButtonTapped(_ sender: UIBarButtonItem) {
+    private func navScanButtonTapped(_ sender: UIBarButtonItem) {
         
     }
     
