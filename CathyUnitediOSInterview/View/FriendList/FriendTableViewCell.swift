@@ -50,9 +50,9 @@ class FriendTableViewCell: UITableViewCell {
         config.contentInsets = NSDirectionalEdgeInsets(top: 2, leading: 9, bottom: 2, trailing: 9)
         config.background.backgroundColor = .white
         config.background.cornerRadius = 2
-        config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { outgoing in
-            var incoming = outgoing
-            incoming.font = UIFont.systemFont(ofSize: 14)
+        config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
+            var outgoing = incoming
+            outgoing.font = UIFont.systemFont(ofSize: 14)
             return outgoing
         }
         let button = UIButton(configuration: config)
@@ -68,9 +68,9 @@ class FriendTableViewCell: UITableViewCell {
         config.contentInsets = NSDirectionalEdgeInsets(top: 2, leading: 9, bottom: 2, trailing: 9)
         config.background.backgroundColor = .white
         config.background.cornerRadius = 2
-        config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { outgoing in
-            var incoming = outgoing
-            incoming.font = UIFont.systemFont(ofSize: 14)
+        config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
+            var outgoing = incoming
+            outgoing.font = UIFont.systemFont(ofSize: 14)
             return outgoing
         }
         let button = UIButton(configuration: config)
