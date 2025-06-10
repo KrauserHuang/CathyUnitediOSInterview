@@ -61,7 +61,6 @@ class FriendListHeaderView: UITableViewHeaderFooterView {
     }
     
     private func setupUI() {
-        backgroundColor = .systemBackground
         addSubview(hStackView)
         
         let padding: CGFloat = 10
