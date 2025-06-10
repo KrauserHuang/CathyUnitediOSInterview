@@ -11,9 +11,8 @@ class FriendInvitationTableViewCell: UITableViewCell {
     
     private lazy var avatarImageView: UIImageView = {
         let imageView = UIImageView()
-        imageView.image = UIImage(systemName: "person.crop.circle.fill")
+        imageView.image = UIImage(resource: .imgFriendsList).withConfiguration(UIImage.SymbolConfiguration(pointSize: 40))
         imageView.contentMode = .scaleAspectFill
-        imageView.layer.cornerRadius = 20
         imageView.clipsToBounds = true
         imageView.translatesAutoresizingMaskIntoConstraints = false
         imageView.tintColor = .lightGray
@@ -115,7 +114,6 @@ class FriendInvitationTableViewCell: UITableViewCell {
             hStackView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -15),
             hStackView.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -15),
             
-            avatarImageView.heightAnchor.constraint(equalToConstant: 40),
             avatarImageView.widthAnchor.constraint(equalTo: avatarImageView.heightAnchor, multiplier: 1.0)
         ])
     }

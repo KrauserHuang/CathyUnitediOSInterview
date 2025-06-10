@@ -28,7 +28,6 @@ class FriendTableViewCell: UITableViewCell {
         let imageView = UIImageView()
         imageView.image = UIImage(resource: .imgFriendsList).withConfiguration(UIImage.SymbolConfiguration(pointSize: 40))
         imageView.contentMode = .scaleAspectFill
-//        imageView.layer.cornerRadius = 20
         imageView.clipsToBounds = true
         imageView.translatesAutoresizingMaskIntoConstraints = false
         imageView.tintColor = .lightGray
@@ -82,7 +81,6 @@ class FriendTableViewCell: UITableViewCell {
     private lazy var moreActionButton: UIButton = {
         var config = UIButton.Configuration.plain()
         config.image = UIImage(resource: .icFriendsMore)
-//        config.baseForegroundColor = .systemGray
         config.contentInsets = .zero
         let button = UIButton(configuration: config)
         button.translatesAutoresizingMaskIntoConstraints = false
@@ -125,7 +123,7 @@ class FriendTableViewCell: UITableViewCell {
         super.prepareForReuse()
         
         isTop = false
-        avatarImageView.image = UIImage(systemName: "person.crop.circle.fill")
+        avatarImageView.image = nil
         nameLabel.text = nil
     }
     
