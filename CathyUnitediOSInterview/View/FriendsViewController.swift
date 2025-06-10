@@ -37,16 +37,16 @@ class FriendsViewController: UIViewController {
         return stackView
     }()
     
-    private let entryStatus: FriendPageScenario
+    private let scenario: FriendPageScenario
     private let viewModel: FriendsViewControllerVM
     
     private var friendInvitationListHeightConstraint: NSLayoutConstraint?
     private var friendListHeightConstraint: NSLayoutConstraint?
     private var subscriptions: Set<AnyCancellable> = []
     
-    init(entryStatus: FriendPageScenario) {
-        self.entryStatus = entryStatus
-        self.viewModel = FriendsViewControllerVM(scenario: entryStatus)
+    init(scenario: FriendPageScenario) {
+        self.scenario = scenario
+        self.viewModel = FriendsViewControllerVM(scenario: scenario)
         super.init(nibName: nil, bundle: nil)
     }
     
