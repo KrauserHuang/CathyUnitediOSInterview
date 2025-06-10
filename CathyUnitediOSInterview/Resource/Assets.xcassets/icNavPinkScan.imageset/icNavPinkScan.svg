@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>24B60B29-5DCD-4C1F-905A-7FA74D34033F</title>
+    <g id="好友" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" stroke-linecap="round">
+        <g id="朋友_KOKO-好友_邀請展開" transform="translate(-331.000000, -31.000000)" stroke="#EC008C" stroke-width="1.5">
+            <g id="ic_nav_pink_scan" transform="translate(331.000000, 31.000000)">
+                <g transform="translate(2.000000, 2.000000)">
+                    <path d="M0,6 L0,3.34719618 C0,1.499233 1.49846573,0 3.34674395,0 L6,0" id="Stroke-1" stroke-linejoin="round"></path>
+                    <path d="M20,6 L20,3.34719618 C20,1.499233 18.5015343,0 16.6532561,0 L14,0" id="Stroke-3" stroke-linejoin="round"></path>
+                    <path d="M0,14 L0,16.6532561 C0,18.5015343 1.49846573,20 3.34674395,20 L6,20" id="Stroke-5" stroke-linejoin="round"></path>
+                    <path d="M20,14 L20,16.6532561 C20,18.5015343 18.5015343,20 16.6532561,20 L14,20" id="Stroke-7" stroke-linejoin="round"></path>
+                    <line x1="0" y1="10" x2="20" y2="10" id="Stroke-10"></line>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

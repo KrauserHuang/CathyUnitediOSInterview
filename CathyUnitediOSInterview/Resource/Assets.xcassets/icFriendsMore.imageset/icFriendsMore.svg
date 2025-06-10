@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="18px" height="4px" viewBox="0 0 18 4" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>7AE6FA64-E05F-49F6-962A-46AFD6E67C42</title>
+    <g id="好友" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="朋友_KOKO-好友_列表" transform="translate(-327.000000, -341.000000)" fill="#C9C9C9">
+            <g id="Friends/list/liked" transform="translate(20.000000, 313.000000)">
+                <g id="Action" transform="translate(235.000000, 18.000000)">
+                    <g id="ic_friends_more" transform="translate(72.000000, 10.000000)">
+                        <circle id="ic_home_dot_normal" cx="16" cy="2" r="2"></circle>
+                        <circle id="ic_home_dot_normal" cx="9" cy="2" r="2"></circle>
+                        <circle id="ic_home_dot_normal" cx="2" cy="2" r="2"></circle>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>
