@@ -38,22 +38,10 @@ class EmptyStateView: UIView {
         return label
     }()
     
-    private lazy var addFriendButton: UIButton = {
-        var config = UIButton.Configuration.plain()
-        config.title = "加好友"
-        config.image = UIImage(resource: .icAddFriendWhite).withConfiguration(UIImage.SymbolConfiguration(pointSize: 24))
-        config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
-            var outgoing = incoming
-            outgoing.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-            return outgoing
-        }
-        config.imagePlacement = .trailing
-        config.imagePadding = 10
-        config.baseForegroundColor = .white
-        config.background.backgroundColor = .systemGreen
-        config.cornerStyle = .capsule
-        config.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 60, bottom: 12, trailing: 60)
-        let button = UIButton(configuration: config)
+    private lazy var addFriendButton: GradientButtonView = {
+        let button = GradientButtonView()
+        button.title = "加好友"
+        button.icon = UIImage(resource: .icAddFriendWhite)
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
     }()
@@ -118,7 +106,10 @@ class EmptyStateView: UIView {
     private func setupUI() {
         addSubview(vStackView)
         
-        vStackView.setCustomSpacing(10, after: emptyStateTitleLabel)
+        vStackView.setCustomSpacing(41, after: emptyStateImageView)
+        vStackView.setCustomSpacing(8, after: emptyStateTitleLabel)
+        vStackView.setCustomSpacing(25, after: emptyStateSubTitleLabel)
+        vStackView.setCustomSpacing(37, after: addFriendButton)
         
         NSLayoutConstraint.activate([
             vStackView.centerYAnchor.constraint(equalTo: centerYAnchor),
@@ -127,6 +118,7 @@ class EmptyStateView: UIView {
             vStackView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -20),
             
             emptyStateImageView.heightAnchor.constraint(equalToConstant: 300),
+            addFriendButton.heightAnchor.constraint(equalToConstant: 40),
         ])
     }
 }
