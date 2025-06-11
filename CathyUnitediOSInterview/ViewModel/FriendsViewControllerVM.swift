@@ -62,13 +62,6 @@ class FriendsViewControllerVM: ObservableObject {
         }
     }
     
-    func selectScenario(_ scenario: FriendPageScenario) {
-        self.scenario = scenario
-        Task {
-            await loadScenario()
-        }
-    }
-    
     func updateSearchText(_ text: String) {
         searchText = text
     }
