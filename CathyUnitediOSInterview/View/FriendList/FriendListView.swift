@@ -10,6 +10,7 @@ import UIKit
 
 protocol FriendListViewDelegate: AnyObject {
     func friendListView(_ view: FriendListView, didUpdateSearchText searchText: String)
+    func friendListViewDidBeginSearch(_ view: FriendListView)
     func friendListViewDidCancelSearch(_ view: FriendListView)
 }
 
@@ -122,6 +123,10 @@ extension FriendListView {
 extension FriendListView: FriendListHeaderViewDelegate {
     func friendListHeaderView(_ headerView: FriendListHeaderView, didUpdateSearchText searchText: String) {
         delegate?.friendListView(self, didUpdateSearchText: searchText)
+    }
+    
+    func friendListHeaderViewDidBeginSearch(_ headerView: FriendListHeaderView) {
+        delegate?.friendListViewDidBeginSearch(self)
     }
     
     func friendListHeaderViewDidCancelSearch(_ headerView: FriendListHeaderView) {

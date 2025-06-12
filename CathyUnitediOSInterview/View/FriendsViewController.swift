@@ -176,6 +176,33 @@ class FriendsViewController: UIViewController {
         friendListHeightConstraint = heightConstraint
     }
     
+    private func scrollToFriendList(animated: Bool = true) {
+        // 確保 layout 是最新的
+        view.layoutIfNeeded()
+        
+        // 計算好友列表在 stackView 中的位置
+        var targetY: CGFloat = 0
+        
+        // 累加前面所有 view 的高度
+        targetY += userInfoHeaderView.frame.height
+        targetY += vStackView.spacing // stackView spacing
+        
+        if !friendInvitationListView.isHidden {
+            targetY += friendInvitationListView.frame.height
+            targetY += vStackView.spacing
+        }
+        
+        targetY += pagingHeaderView.frame.height
+        targetY += vStackView.spacing
+        
+        // 設定滾動位置，確保不超過最大滾動範圍
+        let maxOffsetY = max(0, scrollView.contentSize.height - scrollView.frame.height)
+        let finalTargetY = min(targetY, maxOffsetY)
+        
+        let targetPoint = CGPoint(x: 0, y: finalTargetY)
+        scrollView.setContentOffset(targetPoint, animated: animated)
+    }
+    
     @objc
     private func refreshFriendList(_ sender: UIRefreshControl) {
         Task {
@@ -264,6 +291,10 @@ extension FriendsViewController: FriendListViewDelegate {
     func friendListViewDidCancelSearch(_ view: FriendListView) {
         viewModel.updateSearchText("")
         friendListView.updateFriends(viewModel.friends)
+    }
+    
+    func friendListViewDidBeginSearch(_ view: FriendListView) {
+        scrollToFriendList()
     }
 }
 

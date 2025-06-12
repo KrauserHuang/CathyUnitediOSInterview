@@ -9,6 +9,7 @@ import UIKit
 
 protocol FriendListHeaderViewDelegate: AnyObject {
     func friendListHeaderView(_ headerView: FriendListHeaderView, didUpdateSearchText searchText: String)
+    func friendListHeaderViewDidBeginSearch(_ headerView: FriendListHeaderView)
     func friendListHeaderViewDidCancelSearch(_ headerView: FriendListHeaderView)
 }
 
@@ -83,6 +84,10 @@ extension FriendListHeaderView: UISearchBarDelegate {
         if let searchText = searchBar.text, !searchText.isEmpty {
             delegate?.friendListHeaderView(self, didUpdateSearchText: searchText)
         }
+    }
+    
+    func searchBarTextDidBeginEditing(_ searchBar: UISearchBar) {
+        delegate?.friendListHeaderViewDidBeginSearch(self)
     }
     
     func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
