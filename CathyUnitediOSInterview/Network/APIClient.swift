@@ -80,12 +80,12 @@ class APIClient {
         let (response1, response2) = try await (list1, list2)
         let allFriends = response1.friends + response2.friends
         
-        // 以 fid 分組，取 updateDate 較新者
+        // 以 fid 分組，取 formattedUpdateDate 較新者
         let merged = Dictionary(grouping: allFriends, by: { $0.fid })
-            .compactMap { $0.value.max(by: { $0.updateDate < $1.updateDate }) }
-
-        // 為了確保每次刷新後順序一致，依 updateDate 由新到舊排序
-        let sorted = merged.sorted { $0.updateDate > $1.updateDate }
+            .compactMap { $0.value.max(by: { $0.formattedUpdateDate < $1.formattedUpdateDate }) }
+        
+        // 為了確保每次刷新後順序一致，依 fid 由小到大進行排序
+        let sorted = merged.sorted { $0.fid < $1.fid }
         return sorted
     }
     

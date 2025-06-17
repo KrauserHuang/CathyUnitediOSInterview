@@ -32,6 +32,24 @@ struct Friend: Codable, Hashable {
     }
 }
 
+extension Friend {
+    var formattedUpdateDate: Date {     // 因為updateDate回傳格式有兩種(eg. 20190801或者2019/08/01)，都先轉成Date格式
+        let formatter = DateFormatter()
+        
+        formatter.dateFormat = "yyyyMMdd"
+        if let date = formatter.date(from: updateDate) {
+            return date
+        }
+        
+        formatter.dateFormat = "yyyy/MM/dd"
+        if let date = formatter.date(from: updateDate) {
+            return date
+        }
+        
+        return Date()
+    }
+}
+
 enum FriendStatus: Int {
     case invitingSent = 0
     case completed = 1
