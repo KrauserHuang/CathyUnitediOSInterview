@@ -83,7 +83,10 @@ class APIClient {
         // 以 fid 分組，取 updateDate 較新者
         let merged = Dictionary(grouping: allFriends, by: { $0.fid })
             .compactMap { $0.value.max(by: { $0.updateDate < $1.updateDate }) }
-        return merged
+
+        // 為了確保每次刷新後順序一致，依 updateDate 由新到舊排序
+        let sorted = merged.sorted { $0.updateDate > $1.updateDate }
+        return sorted
     }
     
     // 4. 取得 friendListWithInvites
