@@ -32,6 +32,12 @@ class UserInfoHeaderView: UIView {
             return outgoing
         }
         let button = UIButton(configuration: config)
+        button.configurationUpdateHandler = { [weak self] button in
+            guard let self else { return }
+            var config = button.configuration
+            config?.title = (kokoid.isEmpty) ? "設定 KOKO ID" : "KOKO ID：\(kokoid)"
+            button.configuration = config
+        }
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
     }()
@@ -63,6 +69,12 @@ class UserInfoHeaderView: UIView {
         return stackView
     }()
     
+    private var kokoid: String = "" {
+        didSet {
+            kokoIdButton.setNeedsUpdateConfiguration()
+        }
+    }
+    
     override init(frame: CGRect) {
         super.init(frame: frame)
         
@@ -84,5 +96,10 @@ class UserInfoHeaderView: UIView {
             hStackView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -30),
             hStackView.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -padding),
         ])
+    }
+    
+    func configure(with user: User) {
+        usernameLabel.text = user.name
+        kokoid = user.kokoid
     }
 }

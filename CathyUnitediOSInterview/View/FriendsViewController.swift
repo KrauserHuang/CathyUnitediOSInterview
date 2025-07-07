@@ -365,12 +365,11 @@ class FriendsViewController: UIViewController {
     
     private func setupBindings() {
         viewModel.$user
+            .compactMap { $0 }
             .receive(on: DispatchQueue.main)
             .sink { [weak self] user in
                 guard let self else { return }
-                if let user = user {
-//                    userInfoHeaderView.configure(with: user)
-                }
+                userInfoHeaderView.configure(with: user)
             }
             .store(in: &subscriptions)
         
