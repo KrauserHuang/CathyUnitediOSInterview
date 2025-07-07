@@ -8,16 +8,16 @@
 import Combine
 import UIKit
 
-protocol FriendListViewDelegate: AnyObject {
-    func friendListView(_ view: FriendListView, didUpdateSearchText searchText: String)
-    func friendListViewDidBeginSearch(_ view: FriendListView)
-    func friendListViewDidCancelSearch(_ view: FriendListView)
-}
-
-class FriendListView: UIView {
+class FriendListView: UIView, ViewActionPublisher {
     
     enum Section {
         case main
+    }
+    
+    enum Action {
+        case updateSearchText(String)
+        case beginSearch
+        case cancelSearch
     }
     
     private lazy var tableView: UITableView = {
@@ -37,9 +37,11 @@ class FriendListView: UIView {
     typealias Snapshot = NSDiffableDataSourceSnapshot<Section, Friend>
     private lazy var dataSource = makeDataSource()
     
-    @Published var height: CGFloat = 0
+    private let actionSubject = PassthroughSubject<Action, Never>()
+    var actionPublisher: AnyPublisher<Action, Never> { actionSubject.eraseToAnyPublisher() }
+    var headerActionCancellable: AnyCancellable?
     private var subscriptions: Set<AnyCancellable> = []
-    weak var delegate: FriendListViewDelegate?
+    @Published var height: CGFloat = 0
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -79,7 +81,7 @@ class FriendListView: UIView {
 extension FriendListView: UITableViewDelegate {
     func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
         guard let headerView = tableView.dequeueReusableHeaderFooterView(withIdentifier: FriendListHeaderView.reuseIdentifier) as? FriendListHeaderView else { return nil }
-        headerView.delegate = self
+        setupHeaderAction(headerView)
         return headerView
     }
     
@@ -89,6 +91,24 @@ extension FriendListView: UITableViewDelegate {
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
+    }
+    
+    private func setupHeaderAction(_ headerView: FriendListHeaderView) {
+        headerActionCancellable?.cancel()
+        
+        headerActionCancellable = headerView.actionPublisher
+            .sink { [weak self] headerAction in
+                guard let self else { return }
+                
+                switch headerAction {
+                case .updateSearchText(let text):
+                    actionSubject.send(.updateSearchText(text))
+                case .beginSearch:
+                    actionSubject.send(.beginSearch)
+                case .cancelSearch:
+                    actionSubject.send(.cancelSearch)
+                }
+            }
     }
 }
 
@@ -119,18 +139,3 @@ extension FriendListView {
         updateSnapshot(with: friends)
     }
 }
-
-extension FriendListView: FriendListHeaderViewDelegate {
-    func friendListHeaderView(_ headerView: FriendListHeaderView, didUpdateSearchText searchText: String) {
-        delegate?.friendListView(self, didUpdateSearchText: searchText)
-    }
-    
-    func friendListHeaderViewDidBeginSearch(_ headerView: FriendListHeaderView) {
-        delegate?.friendListViewDidBeginSearch(self)
-    }
-    
-    func friendListHeaderViewDidCancelSearch(_ headerView: FriendListHeaderView) {
-        delegate?.friendListViewDidCancelSearch(self)
-    }
-}
-

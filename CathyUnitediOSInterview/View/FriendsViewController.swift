@@ -186,11 +186,31 @@ class FriendsViewController: UIViewController {
     private func setupFriendListView() {
         friendListView.translatesAutoresizingMaskIntoConstraints = false
         vStackView.addArrangedSubview(friendListView)
-        friendListView.delegate = self
         
         let heightConstraint = friendListView.heightAnchor.constraint(equalToConstant: 0)
         heightConstraint.isActive = true
         friendListHeightConstraint = heightConstraint
+        
+        friendListView.actionPublisher
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] action in
+                guard let self else { return }
+                
+                switch action {
+                case .updateSearchText(let searchText):
+                    print("搜尋字：", searchText)
+                    viewModel.updateSearchText(searchText)
+                    friendListView.updateFriends(viewModel.filteredFriends)
+                    
+                case .beginSearch:
+                    scrollToFriendList()
+                    
+                case .cancelSearch:
+                    viewModel.updateSearchText("")
+                    friendListView.updateFriends(viewModel.friends)
+                }
+            }
+            .store(in: &subscriptions)
     }
     
     private func scrollToFriendList(animated: Bool = true) {
@@ -411,24 +431,6 @@ class FriendsViewController: UIViewController {
                 view.layoutIfNeeded()
             }
             .store(in: &subscriptions)
-    }
-}
-
-// MARK: - UISearchBarDelegate & UISearchResultsUpdating
-extension FriendsViewController: FriendListViewDelegate {
-    func friendListView(_ view: FriendListView, didUpdateSearchText searchText: String) {
-        print("搜尋字：", searchText)
-        viewModel.updateSearchText(searchText)
-        friendListView.updateFriends(viewModel.filteredFriends)
-    }
-    
-    func friendListViewDidCancelSearch(_ view: FriendListView) {
-        viewModel.updateSearchText("")
-        friendListView.updateFriends(viewModel.friends)
-    }
-    
-    func friendListViewDidBeginSearch(_ view: FriendListView) {
-        scrollToFriendList()
     }
 }
 

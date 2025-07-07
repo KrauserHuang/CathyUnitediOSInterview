@@ -5,15 +5,16 @@
 //  Created by IT-MAC-02 on 2025/6/9.
 //
 
+import Combine
 import UIKit
 
-protocol FriendListHeaderViewDelegate: AnyObject {
-    func friendListHeaderView(_ headerView: FriendListHeaderView, didUpdateSearchText searchText: String)
-    func friendListHeaderViewDidBeginSearch(_ headerView: FriendListHeaderView)
-    func friendListHeaderViewDidCancelSearch(_ headerView: FriendListHeaderView)
-}
-
-class FriendListHeaderView: UITableViewHeaderFooterView {
+class FriendListHeaderView: UITableViewHeaderFooterView, ViewActionPublisher {
+    
+    enum Action {
+        case updateSearchText(String)
+        case beginSearch
+        case cancelSearch
+    }
     
     private lazy var searchBar: UISearchBar = {
         let searchBar = UISearchBar()
@@ -49,7 +50,8 @@ class FriendListHeaderView: UITableViewHeaderFooterView {
         return stackView
     }()
     
-    weak var delegate: FriendListHeaderViewDelegate?
+    private let actionSubject = PassthroughSubject<Action, Never>()
+    var actionPublisher: AnyPublisher<Action, Never> { actionSubject.eraseToAnyPublisher() }
     
     override init(reuseIdentifier: String?) {
         super.init(reuseIdentifier: reuseIdentifier)
@@ -76,23 +78,23 @@ class FriendListHeaderView: UITableViewHeaderFooterView {
 
 extension FriendListHeaderView: UISearchBarDelegate {
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
-        delegate?.friendListHeaderView(self, didUpdateSearchText: searchText)
+        actionSubject.send(.updateSearchText(searchText))
     }
     
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
         searchBar.resignFirstResponder()
         if let searchText = searchBar.text, !searchText.isEmpty {
-            delegate?.friendListHeaderView(self, didUpdateSearchText: searchText)
+            actionSubject.send(.updateSearchText(searchText))
         }
     }
     
     func searchBarTextDidBeginEditing(_ searchBar: UISearchBar) {
-        delegate?.friendListHeaderViewDidBeginSearch(self)
+        actionSubject.send(.beginSearch)
     }
     
     func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
         searchBar.text = ""
         searchBar.resignFirstResponder()
-        delegate?.friendListHeaderViewDidCancelSearch(self)
+        actionSubject.send(.cancelSearch)
     }
 }
