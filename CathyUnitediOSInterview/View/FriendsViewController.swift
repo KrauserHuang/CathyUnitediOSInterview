@@ -35,6 +35,8 @@ class FriendsViewController: UIViewController {
     private let friendInvitationListView = FriendInvitationListView()
     private let pagingHeaderView = PagingHeaderView(titles: ["好友", "聊天"])
     private let emptyStateView = EmptyStateView()
+    private let loadingStateView = LoadingStateView()
+    private let errorStateView = ErrorStateView()
     private let friendListView = FriendListView()
     private let vStackView: UIStackView = {
         let stackView = UIStackView()
@@ -49,6 +51,7 @@ class FriendsViewController: UIViewController {
     private var friendInvitationListHeightConstraint: NSLayoutConstraint?
     private var friendListHeightConstraint: NSLayoutConstraint?
     private var subscriptions: Set<AnyCancellable> = []
+    private let networkMonitor = NetworkMonitor.shared
     
     init(scenario: FriendPageScenario) {
         self.scenario = scenario
@@ -98,6 +101,8 @@ class FriendsViewController: UIViewController {
         setupFriendInvitationListView()
         setupPagingHeaderView()
         setupEmptyStateView()
+        setupLoadingStateView()
+        setupErrorStateView()
         setupFriendListView()
     }
     
@@ -166,6 +171,18 @@ class FriendsViewController: UIViewController {
         emptyStateView.isHidden = true
     }
     
+    private func setupLoadingStateView() {
+        loadingStateView.translatesAutoresizingMaskIntoConstraints = false
+        vStackView.addArrangedSubview(loadingStateView)
+        loadingStateView.isHidden = true
+    }
+    
+    private func setupErrorStateView() {
+        errorStateView.translatesAutoresizingMaskIntoConstraints = false
+        vStackView.addArrangedSubview(errorStateView)
+        errorStateView.isHidden = true
+    }
+    
     private func setupFriendListView() {
         friendListView.translatesAutoresizingMaskIntoConstraints = false
         vStackView.addArrangedSubview(friendListView)
@@ -210,20 +227,107 @@ class FriendsViewController: UIViewController {
         }
     }
     
+    private func showErrorAlert() {
+        guard let error = viewModel.currentError else { return }
+        
+        let title: String
+        let message: String
+        
+        if let apiError = error as? APIError {
+            title = "連線異常"
+            message = apiError.errorDescription ?? "發生未知錯誤"
+        } else {
+            title = "錯誤"
+            message = error.localizedDescription
+        }
+        
+        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        
+        alert.addAction(UIAlertAction(title: "重試", style: .default) { [weak self] _ in
+            Task {
+                await self?.viewModel.retry()
+            }
+        })
+        
+        alert.addAction(UIAlertAction(title: "取消", style: .cancel) { [weak self] _ in
+            self?.viewModel.clearError()
+        })
+        
+        present(alert, animated: true)
+    }
+    
+    private func updateNetworkStatusUI(_ networkStatus: NetworkStatus) {
+        switch networkStatus {
+        case .disconnected:
+            showNetworkDisconnectedBanner()
+        case .connected, .wifi, .cellular, .wired:
+            hideNetworkDisconnectedBanner()
+        }
+    }
+    
+    private func showNetworkDisconnectedBanner() {
+        let banner = UIView()
+        banner.backgroundColor = .systemRed
+        banner.tag = 999
+        
+        let label = UILabel()
+        label.text = "網路連線中斷"
+        label.textColor = .white
+        label.font = UIFont.systemFont(ofSize: 14, weight: .medium)
+        label.textAlignment = .center
+        label.translatesAutoresizingMaskIntoConstraints = false
+        
+        banner.addSubview(label)
+        banner.translatesAutoresizingMaskIntoConstraints = false
+        
+        if view.viewWithTag(999) == nil {
+            view.addSubview(banner)
+            
+            NSLayoutConstraint.activate([
+                banner.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+                banner.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+                banner.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+                banner.heightAnchor.constraint(equalToConstant: 30),
+                
+                label.centerXAnchor.constraint(equalTo: banner.centerXAnchor),
+                label.centerYAnchor.constraint(equalTo: banner.centerYAnchor)
+            ])
+        }
+    }
+    
+    private func hideNetworkDisconnectedBanner() {
+        view.viewWithTag(999)?.removeFromSuperview()
+    }
+    
     private func updateUI() {
         let hasInviteFriends                = !viewModel.inviteFriends.isEmpty
         let hasFriends                      = !viewModel.friends.isEmpty
-        friendInvitationListView.isHidden   = !hasInviteFriends
-        emptyStateView.isHidden             = hasFriends
-        friendListView.isHidden             = !hasFriends
+        let hasError                        = viewModel.hasError
+        let isLoading                       = viewModel.isLoading
         
-        if hasInviteFriends {
+        friendInvitationListView.isHidden   = !hasInviteFriends || hasError || isLoading
+        emptyStateView.isHidden             = hasFriends || hasError || isLoading
+        friendListView.isHidden             = !hasFriends || hasError || isLoading
+        errorStateView.isHidden             = !hasError
+        loadingStateView.isHidden           = !isLoading
+        
+        if isLoading {
+            loadingStateView.startLoading()
+        } else {
+            loadingStateView.stopLoading()
+        }
+        
+        if hasError, let error = viewModel.currentError {
+            errorStateView.configure(with: error)
+        }
+        
+        if hasInviteFriends && !hasError && !isLoading {
             friendInvitationListView.configure(with: viewModel.inviteFriends)
             friendInvitationListView.setNeedsLayout()
             friendInvitationListView.layoutIfNeeded()
         }
         
-        if hasFriends {
+        if hasFriends && !hasError && !isLoading {
             friendListView.configure(with: viewModel.friends)
             friendListView.setNeedsLayout()
             friendListView.layoutIfNeeded()
@@ -231,6 +335,16 @@ class FriendsViewController: UIViewController {
     }
     
     private func setupBindings() {
+        viewModel.$user
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] user in
+                guard let self else { return }
+                if let user = user {
+//                    userInfoHeaderView.configure(with: user)
+                }
+            }
+            .store(in: &subscriptions)
+        
         viewModel.$inviteFriends
             .receive(on: DispatchQueue.main)
             .sink { [weak self] inviteFriends in
@@ -257,6 +371,26 @@ class FriendsViewController: UIViewController {
                     refreshControl.endRefreshing()
                 }
                 updateUI()
+            }
+            .store(in: &subscriptions)
+        
+        viewModel.$hasError
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] hasError in
+                guard let self else { return }
+                updateUI()
+                if hasError {
+                    showErrorAlert()
+                }
+            }
+            .store(in: &subscriptions)
+        
+        networkMonitor.$networkStatus
+            .receive(on: DispatchQueue.main)
+            .print("🛜 networkStatus")
+            .sink { [weak self] networkStatus in
+                guard let self else { return }
+                updateNetworkStatusUI(networkStatus)
             }
             .store(in: &subscriptions)
         

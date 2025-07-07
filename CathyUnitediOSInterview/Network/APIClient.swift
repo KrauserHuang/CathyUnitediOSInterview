@@ -7,6 +7,7 @@
 
 import Combine
 import Foundation
+import Network
 
 /*
  使用者資料 → https://dimanyen.github.io/man.json
@@ -40,6 +41,9 @@ enum APIError: Error {
     case noData
     case decodingError(Error)
     case networkError(Error)
+    case timeout
+    case networkUnavailable
+    case tooManyRetries
     
     var errorDescription: String? {
         switch self {
@@ -47,6 +51,9 @@ enum APIError: Error {
         case .noData: return "🙅🙅 No Data"
         case .decodingError(let error): return "❌❌ Decoding failed: \(error.localizedDescription)"
         case .networkError(let error): return "🛜🛜 Network failed: \(error.localizedDescription)"
+        case .timeout: return "⏰⏰ Request timeout"
+        case .networkUnavailable: return "📡📡 Network unavailable"
+        case .tooManyRetries: return "🔄🔄 Too many retries"
         }
     }
 }
@@ -57,9 +64,14 @@ class APIClient {
     private let session: URLSession
     private let decoder = JSONDecoder()
     private var subscriptions: Set<AnyCancellable> = []
+    private let networkMonitor = NetworkMonitor.shared
+    private let retryConfiguration = RetryConfiguration.default
     
     private init() {
-        self.session = URLSession.shared
+        let configuration = URLSessionConfiguration.default
+        configuration.timeoutIntervalForRequest = 30.0
+        configuration.timeoutIntervalForResource = 60.0
+        self.session = URLSession(configuration: configuration)
     }
     
     func fetchUserData() async throws -> User? {
@@ -102,8 +114,15 @@ class APIClient {
     }
     
     private func performRequest<T: Codable>(for endpoint: APIEndpoint) async throws -> T {
+        guard networkMonitor.isConnected else {
+            throw APIError.networkUnavailable
+        }
+        
         do {
-            let (data, response) = try await session.data(from: endpoint.url)
+            let (data, response) = try await session.dataWithRetry(
+                from: endpoint.url,
+                configuration: retryConfiguration
+            )
             
             guard let httpResponse = response as? HTTPURLResponse,
                   httpResponse.statusCode == 200 else {
@@ -121,11 +140,33 @@ class APIClient {
                 throw APIError.decodingError(error)
             }
         } catch {
-            if error is APIError {
+            if let urlError = error as? URLError {
+                switch urlError.code {
+                case .timedOut:
+                    throw APIError.timeout
+                case .notConnectedToInternet, .networkConnectionLost:
+                    throw APIError.networkUnavailable
+                default:
+                    throw APIError.networkError(urlError)
+                }
+            } else if error is APIError {
                 throw error
             } else {
                 throw APIError.networkError(error)
             }
         }
+    }
+    
+    var isNetworkAvailable: Bool {
+        return networkMonitor.isConnected
+    }
+    
+    var networkStatus: NetworkStatus {
+        return networkMonitor.networkStatus
+    }
+    
+    func networkStatusPublisher() -> AnyPublisher<NetworkStatus, Never> {
+        return networkMonitor.$networkStatus
+            .eraseToAnyPublisher()
     }
 }
