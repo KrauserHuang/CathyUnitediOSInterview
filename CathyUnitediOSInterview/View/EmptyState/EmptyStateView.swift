@@ -104,6 +104,7 @@ class EmptyStateView: UIView {
     }
     
     private func setupUI() {
+        translatesAutoresizingMaskIntoConstraints = false
         addSubview(vStackView)
         
         vStackView.setCustomSpacing(41, after: emptyStateImageView)

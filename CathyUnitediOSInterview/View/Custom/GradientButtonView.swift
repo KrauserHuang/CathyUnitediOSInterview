@@ -76,6 +76,7 @@ class GradientButtonView: UIView {
     }
     
     private func setupUI() {
+        translatesAutoresizingMaskIntoConstraints = false
         addSubview(titleLabel)
         addSubview(iconImageView)
         

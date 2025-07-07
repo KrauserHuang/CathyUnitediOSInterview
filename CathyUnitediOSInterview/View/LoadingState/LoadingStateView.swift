@@ -44,6 +44,7 @@ class LoadingStateView: UIView {
     }
     
     private func setupUI() {
+        translatesAutoresizingMaskIntoConstraints = false
         addSubview(vStackView)
         
         NSLayoutConstraint.activate([

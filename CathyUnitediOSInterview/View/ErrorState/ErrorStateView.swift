@@ -77,6 +77,7 @@ class ErrorStateView: UIView {
     
     private func setupUI() {
         backgroundColor = .systemBackground
+        translatesAutoresizingMaskIntoConstraints = false
         addSubview(vStackView)
         
         NSLayoutConstraint.activate([
