@@ -14,19 +14,36 @@ protocol ErrorStateViewDelegate: AnyObject {
 
 class ErrorStateView: UIView {
     
+    private let blurView: UIVisualEffectView = {
+        let blurEffect = UIBlurEffect(style: .systemUltraThinMaterial)
+        let view = UIVisualEffectView(effect: blurEffect)
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }()
+    
+    private let containerView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .systemBackground
+        view.layer.cornerRadius = 20
+        view.layer.shadowColor = UIColor.black.cgColor
+        view.layer.shadowOpacity = 0.1
+        view.layer.shadowOffset = CGSize(width: 0, height: 10)
+        view.layer.shadowRadius = 20
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }()
+    
     private let errorImageView: UIImageView = {
         let imageView = UIImageView()
-        imageView.image = UIImage(systemName: "exclamationmark.triangle")
-        imageView.tintColor = .systemRed
         imageView.contentMode = .scaleAspectFit
+        imageView.tintColor = .systemRed
         imageView.translatesAutoresizingMaskIntoConstraints = false
         return imageView
     }()
     
     private let errorTitleLabel: UILabel = {
         let label = UILabel()
-        label.text = "發生錯誤"
-        label.font = UIFont.boldSystemFont(ofSize: 18)
+        label.font = .systemFont(ofSize: 24, weight: .bold)
         label.textColor = .label
         label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -35,8 +52,7 @@ class ErrorStateView: UIView {
     
     private let errorMessageLabel: UILabel = {
         let label = UILabel()
-        label.text = "無法載入資料，請檢查網路連線"
-        label.font = UIFont.systemFont(ofSize: 14)
+        label.font = .systemFont(ofSize: 16)
         label.textColor = .secondaryLabel
         label.textAlignment = .center
         label.numberOfLines = 0
@@ -44,16 +60,31 @@ class ErrorStateView: UIView {
         return label
     }()
     
-    private lazy var retryButton: GradientButtonView = {
-        let button = GradientButtonView()
-        button.title = "重試"
-        button.icon = UIImage(systemName: "arrow.clockwise")
+    private lazy var retryButton: UIButton = {
+        var config = UIButton.Configuration.filled()
+        config.title = "重試"
+        config.image = UIImage(systemName: "arrow.clockwise")
+        config.imagePadding = 8
+        config.cornerStyle = .medium
+        config.baseBackgroundColor = .systemBlue
+        
+        let button = UIButton(configuration: config)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        return button
+    }()
+    
+    private let dismissButton: UIButton = {
+        var config = UIButton.Configuration.plain()
+        config.title = "關閉"
+        config.baseForegroundColor = .secondaryLabel
+        
+        let button = UIButton(configuration: config)
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
     }()
     
     private lazy var vStackView: UIStackView = {
-        let stackView = UIStackView(arrangedSubviews: [errorImageView, errorTitleLabel, errorMessageLabel, retryButton])
+        let stackView = UIStackView(arrangedSubviews: [errorImageView, errorTitleLabel, errorMessageLabel, retryButton, dismissButton])
         stackView.axis = .vertical
         stackView.spacing = 20
         stackView.alignment = .center
@@ -62,6 +93,10 @@ class ErrorStateView: UIView {
         return stackView
     }()
     
+    private let retrySubject = PassthroughSubject<Void, Never>()
+    var onRetry: AnyPublisher<Void, Never> { retrySubject.eraseToAnyPublisher() }
+    private let dismissSubject = PassthroughSubject<Void, Never>()
+    var onDismiss: AnyPublisher<Void, Never> { dismissSubject.eraseToAnyPublisher() }
     private var subscription: AnyCancellable?
     
     override init(frame: CGRect) {
@@ -93,11 +128,24 @@ class ErrorStateView: UIView {
     }
     
     private func setupActions() {
-        retryButton.tapPublisher
-            .sink { [weak self] _ in
-                guard let self else { return }
-                
-            }
+        retryButton.addTarget(self, action: #selector(retryTapped(_:)), for: .touchUpInside)
+        dismissButton.addTarget(self, action: #selector(dismissTapped(_:)), for: .touchUpInside)
+        
+        // 點擊背景關閉
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(backgroundTapped(_:)))
+        blurView.addGestureRecognizer(tapGesture)
+    }
+    
+    @objc private func retryTapped(_ sender: UIButton) {
+        retrySubject.send()
+    }
+    
+    @objc private func dismissTapped(_ sender: UIButton) {
+        dismissSubject.send()
+    }
+    
+    @objc private func backgroundTapped(_ sender: UITapGestureRecognizer) {
+        dismissSubject.send()
     }
     
     func configure(with error: Error) {
@@ -129,14 +177,16 @@ class ErrorStateView: UIView {
                 errorMessageLabel.text = "伺服器未回應任何資料"
                 
             default:
-                errorImageView.image = UIImage(systemName: "exclamationmark.triangle")
-                errorTitleLabel.text = "發生錯誤"
-                errorMessageLabel.text = apiError.errorDescription ?? "未知錯誤"
+                setDefaultError(message: error.localizedDescription)
             }
         } else {
-            errorImageView.image = UIImage(systemName: "exclamationmark.triangle")
-            errorTitleLabel.text = "發生錯誤"
-            errorMessageLabel.text = error.localizedDescription
+            setDefaultError(message: error.localizedDescription)
         }
+    }
+    
+    private func setDefaultError(message: String?) {
+        errorImageView.image = UIImage(systemName: "exclamationmark.triangle")
+        errorTitleLabel.text = "發生錯誤"
+        errorMessageLabel.text = message ?? "未知錯誤"
     }
 }
