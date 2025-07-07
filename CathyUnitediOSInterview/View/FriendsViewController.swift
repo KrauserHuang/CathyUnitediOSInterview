@@ -23,10 +23,11 @@ enum FriendPageScenario: CaseIterable {
 }
 
 class FriendsViewController: UIViewController {
-    
+    // MARK: - UI 元件
     private let scrollView: UIScrollView = {
         let scrollView = UIScrollView()
         scrollView.refreshControl = UIRefreshControl()
+        scrollView.translatesAutoresizingMaskIntoConstraints = false
         return scrollView
     }()
     
@@ -36,22 +37,21 @@ class FriendsViewController: UIViewController {
     private let pagingHeaderView = PagingHeaderView(titles: ["好友", "聊天"])
     private let emptyStateView = EmptyStateView()
     private let loadingStateView = LoadingStateView()
-    private let errorStateView = ErrorStateView()
     private let friendListView = FriendListView()
     private let vStackView: UIStackView = {
         let stackView = UIStackView()
         stackView.axis = .vertical
         stackView.spacing = 5
+        stackView.translatesAutoresizingMaskIntoConstraints = false
         return stackView
     }()
     
     private let scenario: FriendPageScenario
     private let viewModel: FriendsViewControllerVM
-    
+    private let networkMonitor = NetworkMonitor.shared
+    private var subscriptions: Set<AnyCancellable> = []
     private var friendInvitationListHeightConstraint: NSLayoutConstraint?
     private var friendListHeightConstraint: NSLayoutConstraint?
-    private var subscriptions: Set<AnyCancellable> = []
-    private let networkMonitor = NetworkMonitor.shared
     
     init(scenario: FriendPageScenario) {
         self.scenario = scenario
@@ -74,14 +74,12 @@ class FriendsViewController: UIViewController {
     private func setupUI() {
         view.backgroundColor = .systemBackground
         
-        scrollView.translatesAutoresizingMaskIntoConstraints = false
-        vStackView.translatesAutoresizingMaskIntoConstraints = false
-        
         refreshControl.addTarget(self, action: #selector(refreshFriendList(_:)), for: .valueChanged)
         scrollView.refreshControl = refreshControl
         
         view.addSubview(scrollView)
         scrollView.addSubview(vStackView)
+        view.addSubview(loadingStateView)
         
         NSLayoutConstraint.activate([
             scrollView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
@@ -94,16 +92,32 @@ class FriendsViewController: UIViewController {
             vStackView.trailingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.trailingAnchor),
             vStackView.bottomAnchor.constraint(equalTo: scrollView.contentLayoutGuide.bottomAnchor),
             
-            vStackView.widthAnchor.constraint(equalTo: scrollView.frameLayoutGuide.widthAnchor)
+            vStackView.widthAnchor.constraint(equalTo: scrollView.frameLayoutGuide.widthAnchor),
+            
+            loadingStateView.centerXAnchor.constraint(equalTo: view.safeAreaLayoutGuide.centerXAnchor),
+            loadingStateView.centerYAnchor.constraint(equalTo: view.safeAreaLayoutGuide.centerYAnchor),
         ])
         
-        setupUserInfoView()
-        setupFriendInvitationListView()
-        setupPagingHeaderView()
-        setupEmptyStateView()
-        setupLoadingStateView()
-        setupErrorStateView()
-        setupFriendListView()
+        // 加入各區塊
+        [userInfoHeaderView,
+         friendInvitationListView,
+         pagingHeaderView,
+         emptyStateView,
+         friendListView
+        ].forEach {
+            $0.translatesAutoresizingMaskIntoConstraints = false
+            vStackView.addArrangedSubview($0)
+        }
+        
+        // 初始隱藏
+        emptyStateView.isHidden = true
+        loadingStateView.isHidden = true
+        
+        // 高度約束
+        friendInvitationListHeightConstraint = friendInvitationListView.heightAnchor.constraint(equalToConstant: 0)
+        friendInvitationListHeightConstraint?.isActive = true
+        friendListHeightConstraint = friendListView.heightAnchor.constraint(equalToConstant: 0)
+        friendListHeightConstraint?.isActive = true
     }
     
     private func setupNavigationBar() {
@@ -136,69 +150,89 @@ class FriendsViewController: UIViewController {
     }
     
     @objc
-    private func navTransferButtonTapped(_ sender: UIBarButtonItem) {
-        
-    }
+    private func navTransferButtonTapped(_ sender: UIBarButtonItem) {}
     
     @objc
-    private func navScanButtonTapped(_ sender: UIBarButtonItem) {
-        
-    }
+    private func navScanButtonTapped(_ sender: UIBarButtonItem) {}
     
-    private func setupUserInfoView() {
-        userInfoHeaderView.translatesAutoresizingMaskIntoConstraints = false
-        vStackView.addArrangedSubview(userInfoHeaderView)
-    }
-    
-    private func setupFriendInvitationListView() {
-        friendInvitationListView.translatesAutoresizingMaskIntoConstraints = false
-        vStackView.addArrangedSubview(friendInvitationListView)
-        
-        let heightConstraint = friendInvitationListView.heightAnchor.constraint(equalToConstant: 0)
-        heightConstraint.isActive = true
-        friendInvitationListHeightConstraint = heightConstraint
-    }
-    
-    private func setupPagingHeaderView() {
-        pagingHeaderView.translatesAutoresizingMaskIntoConstraints = false
-        vStackView.addArrangedSubview(pagingHeaderView)
-        
-        pagingHeaderView.actionPublisher
+    private func setupBindings() {
+        viewModel.$user
+            .compactMap { $0 }
             .receive(on: DispatchQueue.main)
-            .sink { action in
-                switch action {
-                case .selectPage(let index):
-                    print("選擇了索引：\(index)")
+            .sink { [weak self] user in
+                guard let self else { return }
+                userInfoHeaderView.configure(with: user)
+            }
+            .store(in: &subscriptions)
+        
+        viewModel.$inviteFriends
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] inviteFriends in
+                guard let self else { return }
+                friendInvitationListView.configure(with: inviteFriends)
+                refreshControl.endRefreshing()
+            }
+            .store(in: &subscriptions)
+        
+        viewModel.$friends
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] friends in
+                guard let self else { return }
+                friendListView.updateFriends(friends)
+                refreshControl.endRefreshing()
+            }
+            .store(in: &subscriptions)
+        
+        viewModel.$isLoading
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] isLoading in
+                guard let self else { return }
+                if !isLoading {
+                    refreshControl.endRefreshing()
+                }
+                updateUI()
+            }
+            .store(in: &subscriptions)
+        
+        viewModel.$hasError
+            .combineLatest(viewModel.$currentError)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] hasError, currentError in
+                guard let self else { return }
+                updateUI()
+            }
+            .store(in: &subscriptions)
+        
+        networkMonitor.$networkStatus
+            .removeDuplicates()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] status in
+                guard let self else { return }
+                if #available(iOS 17.0, *) {
+                    updateNetworkContentUnavailable(status)
+                } else {
+                    updateNetworkStatusUI(status)
                 }
             }
             .store(in: &subscriptions)
-    }
-    
-    private func setupEmptyStateView() {
-        emptyStateView.translatesAutoresizingMaskIntoConstraints = false
-        vStackView.addArrangedSubview(emptyStateView)
-        emptyStateView.isHidden = true
-    }
-    
-    private func setupLoadingStateView() {
-        loadingStateView.translatesAutoresizingMaskIntoConstraints = false
-        vStackView.addArrangedSubview(loadingStateView)
-        loadingStateView.isHidden = true
-    }
-    
-    private func setupErrorStateView() {
-        errorStateView.translatesAutoresizingMaskIntoConstraints = false
-        vStackView.addArrangedSubview(errorStateView)
-        errorStateView.isHidden = true
-    }
-    
-    private func setupFriendListView() {
-        friendListView.translatesAutoresizingMaskIntoConstraints = false
-        vStackView.addArrangedSubview(friendListView)
         
-        let heightConstraint = friendListView.heightAnchor.constraint(equalToConstant: 0)
-        heightConstraint.isActive = true
-        friendListHeightConstraint = heightConstraint
+        friendInvitationListView.$height
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] height in
+                guard let self else { return }
+                friendInvitationListHeightConstraint?.constant = height
+                view.layoutIfNeeded()
+            }
+            .store(in: &subscriptions)
+        
+        friendListView.$height
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] height in
+                guard let self else { return }
+                friendListHeightConstraint?.constant = height
+                view.layoutIfNeeded()
+            }
+            .store(in: &subscriptions)
         
         friendListView.actionPublisher
             .receive(on: DispatchQueue.main)
@@ -207,7 +241,6 @@ class FriendsViewController: UIViewController {
                 
                 switch action {
                 case .updateSearchText(let searchText):
-                    print("搜尋字：", searchText)
                     viewModel.updateSearchText(searchText)
                     friendListView.updateFriends(viewModel.filteredFriends)
                     
@@ -220,6 +253,46 @@ class FriendsViewController: UIViewController {
                 }
             }
             .store(in: &subscriptions)
+        
+        pagingHeaderView.actionPublisher
+            .receive(on: DispatchQueue.main)
+            .sink { action in
+                switch action {
+                case .selectPage(let index):
+                    print("選擇了索引：\(index)")
+                }
+            }
+            .store(in: &subscriptions)
+    }
+    
+    private func updateUI() {
+        let hasInviteFriends                = !viewModel.inviteFriends.isEmpty
+        let hasFriends                      = !viewModel.friends.isEmpty
+        let hasError                        = viewModel.hasError
+        let isLoading                       = viewModel.isLoading
+        
+        friendInvitationListView.isHidden   = !hasInviteFriends || hasError || isLoading
+        emptyStateView.isHidden             = hasFriends || hasError || isLoading
+        friendListView.isHidden             = !hasFriends || hasError || isLoading
+        loadingStateView.isHidden           = !isLoading
+        
+        if isLoading {
+            loadingStateView.startLoading()
+        } else {
+            loadingStateView.stopLoading()
+        }
+        
+        if hasInviteFriends && !hasError && !isLoading {
+            friendInvitationListView.configure(with: viewModel.inviteFriends)
+            friendInvitationListView.setNeedsLayout()
+            friendInvitationListView.layoutIfNeeded()
+        }
+        
+        if hasFriends && !hasError && !isLoading {
+            friendListView.configure(with: viewModel.friends)
+            friendListView.setNeedsLayout()
+            friendListView.layoutIfNeeded()
+        }
     }
     
     private func scrollToFriendList(animated: Bool = true) {
@@ -254,35 +327,6 @@ class FriendsViewController: UIViewController {
         Task {
             await viewModel.reloadFriendList()
         }
-    }
-    
-    private func showErrorAlert() {
-        guard let error = viewModel.currentError else { return }
-        
-        let title: String
-        let message: String
-        
-        if let apiError = error as? APIError {
-            title = "連線異常"
-            message = apiError.errorDescription ?? "發生未知錯誤"
-        } else {
-            title = "錯誤"
-            message = error.localizedDescription
-        }
-        
-        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
-        
-        alert.addAction(UIAlertAction(title: "重試", style: .default) { [weak self] _ in
-            Task {
-                await self?.viewModel.retry()
-            }
-        })
-        
-        alert.addAction(UIAlertAction(title: "取消", style: .cancel) { [weak self] _ in
-            self?.viewModel.clearError()
-        })
-        
-        present(alert, animated: true)
     }
     
     private func updateNetworkStatusUI(_ networkStatus: NetworkStatus) {
@@ -328,116 +372,78 @@ class FriendsViewController: UIViewController {
         view.viewWithTag(999)?.removeFromSuperview()
     }
     
-    private func updateUI() {
-        let hasInviteFriends                = !viewModel.inviteFriends.isEmpty
-        let hasFriends                      = !viewModel.friends.isEmpty
-        let hasError                        = viewModel.hasError
-        let isLoading                       = viewModel.isLoading
-        
-        friendInvitationListView.isHidden   = !hasInviteFriends || hasError || isLoading
-        emptyStateView.isHidden             = hasFriends || hasError || isLoading
-        friendListView.isHidden             = !hasFriends || hasError || isLoading
-        errorStateView.isHidden             = !hasError
-        loadingStateView.isHidden           = !isLoading
-        
-        if isLoading {
-            loadingStateView.startLoading()
+    // MARK: - 網路狀態顯示 (iOS 17+)
+    @available(iOS 17.0, *)
+    private func updateNetworkContentUnavailable(_ status: NetworkStatus) {
+        if status == .disconnected {
+            var config = UIContentUnavailableConfiguration.empty()
+            config.image = UIImage(systemName: "wifi.slash")
+            config.text = "網路連線中斷"
+            config.secondaryText = "請檢查您的網路設定"
+            
+            var buttonConfig = UIButton.Configuration.filled()
+            buttonConfig.title = "重試"
+            config.button = buttonConfig
+            config.buttonProperties.primaryAction = UIAction { [weak self] _ in
+                guard let self else { return }
+                Task {
+                    await self.viewModel.retry()
+                    self.setNeedsUpdateContentUnavailableConfiguration()
+                }
+            }
+            
+            contentUnavailableConfiguration = config
         } else {
-            loadingStateView.stopLoading()
+            contentUnavailableConfiguration = nil
         }
+        setNeedsUpdateContentUnavailableConfiguration()
+    }
+    
+    // iOS 16 以下的實作
+    private func showErrorOverlay(_ error: Error) {
+        let errorView = ErrorStateView()
+        errorView.configure(with: error)
+        errorView.translatesAutoresizingMaskIntoConstraints = false
+        errorView.alpha = 0
         
-        if hasError, let error = viewModel.currentError {
-            errorStateView.configure(with: error)
-        }
+        view.addSubview(errorView)
+        NSLayoutConstraint.activate([
+            errorView.centerXAnchor.constraint(equalTo: view.safeAreaLayoutGuide.centerXAnchor),
+            errorView.centerYAnchor.constraint(equalTo: view.safeAreaLayoutGuide.centerYAnchor),
+        ])
         
-        if hasInviteFriends && !hasError && !isLoading {
-            friendInvitationListView.configure(with: viewModel.inviteFriends)
-            friendInvitationListView.setNeedsLayout()
-            friendInvitationListView.layoutIfNeeded()
-        }
+        var errorViewSubscriptions = Set<AnyCancellable>()
         
-        if hasFriends && !hasError && !isLoading {
-            friendListView.configure(with: viewModel.friends)
-            friendListView.setNeedsLayout()
-            friendListView.layoutIfNeeded()
+        errorView.onRetry
+            .sink { [weak self] _ in
+                self?.hideErrorOverlay(errorView)
+                Task {
+                    await self?.viewModel.retry()
+                }
+            }
+            .store(in: &errorViewSubscriptions)
+        
+        errorView.onDismiss
+            .sink { [weak self] _ in
+                self?.hideErrorOverlay(errorView)
+                self?.viewModel.clearError()
+            }
+            .store(in: &errorViewSubscriptions)
+        
+        // 保存 subscriptions 避免被釋放
+        objc_setAssociatedObject(errorView, "subscriptions", errorViewSubscriptions, .OBJC_ASSOCIATION_RETAIN)
+        
+        // 動畫顯示
+        UIView.animate(withDuration: 0.3) {
+            errorView.alpha = 1
         }
     }
     
-    private func setupBindings() {
-        viewModel.$user
-            .compactMap { $0 }
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] user in
-                guard let self else { return }
-                userInfoHeaderView.configure(with: user)
-            }
-            .store(in: &subscriptions)
-        
-        viewModel.$inviteFriends
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] inviteFriends in
-                guard let self else { return }
-                friendInvitationListView.configure(with: inviteFriends)
-                refreshControl.endRefreshing()
-            }
-            .store(in: &subscriptions)
-        
-        viewModel.$friends
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] friends in
-                guard let self else { return }
-                friendListView.updateFriends(friends)
-                refreshControl.endRefreshing()
-            }
-            .store(in: &subscriptions)
-            
-        viewModel.$isLoading
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] isLoading in
-                guard let self else { return }
-                if !isLoading {
-                    refreshControl.endRefreshing()
-                }
-                updateUI()
-            }
-            .store(in: &subscriptions)
-        
-        viewModel.$hasError
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] hasError in
-                guard let self else { return }
-                updateUI()
-                if hasError {
-                    showErrorAlert()
-                }
-            }
-            .store(in: &subscriptions)
-        
-        networkMonitor.$networkStatus
-            .receive(on: DispatchQueue.main)
-            .print("🛜 networkStatus")
-            .sink { [weak self] networkStatus in
-                guard let self else { return }
-                updateNetworkStatusUI(networkStatus)
-            }
-            .store(in: &subscriptions)
-        
-        friendInvitationListView.$height
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] height in
-                guard let self else { return }
-                friendInvitationListHeightConstraint?.constant = height
-                view.layoutIfNeeded()
-            }
-            .store(in: &subscriptions)
-        
-        friendListView.$height
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] height in
-                guard let self else { return }
-                friendListHeightConstraint?.constant = height
-                view.layoutIfNeeded()
-            }
-            .store(in: &subscriptions)
+    private func hideErrorOverlay(_ errorView: UIView) {
+        UIView.animate(withDuration: 0.3, animations: {
+            errorView.alpha = 0
+        }) { _ in
+            errorView.removeFromSuperview()
+        }
     }
 }
