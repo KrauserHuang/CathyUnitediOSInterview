@@ -5,13 +5,14 @@
 //  Created by Tai Chin Huang on 2025/6/8.
 //
 
+import Combine
 import UIKit
 
-protocol PagingHeaderViewDelegate: AnyObject {
-    func pagingHeaderView(_ headerView: PagingHeaderView, didSelect index: Int)
-}
-
 class PagingHeaderView: UIView {
+    
+    enum Action {
+        case selectPage(index: Int)
+    }
     
     private let titles: [String]
     private var buttons: [UIButton] = []
@@ -34,7 +35,8 @@ class PagingHeaderView: UIView {
     private var selectedIndex: Int = 0
     private var indicatorCenterXConstraint: NSLayoutConstraint!
     private var indicatorWidthConstraint: NSLayoutConstraint!
-    weak var delegate: PagingHeaderViewDelegate?
+    private let actionSubject = PassthroughSubject<Action, Never>()
+    var actionPublisher: AnyPublisher<Action, Never> { actionSubject.eraseToAnyPublisher() }
     
     init(titles: [String]) {
         self.titles = titles
@@ -118,7 +120,7 @@ class PagingHeaderView: UIView {
     @objc
     private func tabTapped(_ sender: UIButton) {
         setSelectedIndex(sender.tag, animated: true)
-        delegate?.pagingHeaderView(self, didSelect: sender.tag)
+        actionSubject.send(.selectPage(index: sender.tag))
     }
     
     func setSelectedIndex(_ index: Int, animated: Bool) {

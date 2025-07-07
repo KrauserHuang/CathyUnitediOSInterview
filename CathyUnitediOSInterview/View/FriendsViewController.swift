@@ -161,8 +161,17 @@ class FriendsViewController: UIViewController {
     
     private func setupPagingHeaderView() {
         pagingHeaderView.translatesAutoresizingMaskIntoConstraints = false
-        pagingHeaderView.delegate = self
         vStackView.addArrangedSubview(pagingHeaderView)
+        
+        pagingHeaderView.actionPublisher
+            .receive(on: DispatchQueue.main)
+            .sink { action in
+                switch action {
+                case .selectPage(let index):
+                    print("選擇了索引：\(index)")
+                }
+            }
+            .store(in: &subscriptions)
     }
     
     private func setupEmptyStateView() {
@@ -431,12 +440,5 @@ class FriendsViewController: UIViewController {
                 view.layoutIfNeeded()
             }
             .store(in: &subscriptions)
-    }
-}
-
-// MARK: - PagingHeaderViewDelegate
-extension FriendsViewController: PagingHeaderViewDelegate {
-    func pagingHeaderView(_ pagingHeaderView: PagingHeaderView, didSelect index: Int) {
-        print("選擇了索引：\(index)")
     }
 }
