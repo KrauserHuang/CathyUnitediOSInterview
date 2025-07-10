@@ -45,6 +45,18 @@ enum APIError: Error {
     case networkUnavailable
     case tooManyRetries
     
+    var errorTitle: String {
+        switch self {
+        case .invalidURL: return "URL格式錯誤"
+        case .noData: return "無資料"
+        case .decodingError(let error): return "資料格式錯誤，\(error.localizedDescription)"
+        case .networkError(let error): return "網路錯誤，\(error.localizedDescription)"
+        case .timeout: return "連線逾時"
+        case .networkUnavailable: return "網路連線異常"
+        case .tooManyRetries: return "重試次數過多"
+        }
+    }
+    
     var errorDescription: String? {
         switch self {
         case .invalidURL: return "😵😵 Invalid URL"
