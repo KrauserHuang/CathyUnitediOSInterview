@@ -77,7 +77,7 @@ class APIClient {
     private let decoder = JSONDecoder()
     private var subscriptions: Set<AnyCancellable> = []
     private let networkMonitor = NetworkMonitor.shared
-    private let retryConfiguration = RetryConfiguration.default
+    private let retryConfiguration = PerformanceOptimizations.optimizedRetryConfiguration()
     
     private init() {
         let configuration = URLSessionConfiguration.default
@@ -102,15 +102,14 @@ class APIClient {
         async let list1: FriendResponse = performRequest(for: .friendList1)
         async let list2: FriendResponse = performRequest(for: .friendList2)
         let (response1, response2) = try await (list1, list2)
-        let allFriends = response1.friends + response2.friends
         
-        // 以 fid 分組，取 formattedUpdateDate 較新者
-        let merged = Dictionary(grouping: allFriends, by: { $0.fid })
-            .compactMap { $0.value.max(by: { $0.formattedUpdateDate < $1.formattedUpdateDate }) }
+        // Use optimized merging algorithm
+        let merged = PerformanceOptimizations.optimizedFriendListMerging(
+            friends1: response1.friends,
+            friends2: response2.friends
+        )
         
-        // 為了確保每次刷新後順序一致，依 fid 由小到大進行排序
-        let sorted = merged.sorted { $0.fid < $1.fid }
-        return sorted
+        return merged
     }
     
     // 4. 取得 friendListWithInvites

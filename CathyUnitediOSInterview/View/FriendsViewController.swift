@@ -52,6 +52,7 @@ class FriendsViewController: UIViewController {
     private var subscriptions: Set<AnyCancellable> = []
     private var friendInvitationListHeightConstraint: NSLayoutConstraint?
     private var friendListHeightConstraint: NSLayoutConstraint?
+    private let searchDebouncer = PerformanceOptimizations.SearchDebouncer()
     
     init(scenario: FriendPageScenario) {
         self.scenario = scenario
@@ -241,8 +242,12 @@ class FriendsViewController: UIViewController {
                 
                 switch action {
                 case .updateSearchText(let searchText):
-                    viewModel.updateSearchText(searchText)
-                    friendListView.updateFriends(viewModel.filteredFriends)
+                    // Use debounced search for better performance
+                    searchDebouncer.debounce { [weak self] in
+                        guard let self else { return }
+                        viewModel.updateSearchText(searchText)
+                        friendListView.updateFriends(viewModel.filteredFriends)
+                    }
                     
                 case .beginSearch:
                     scrollToFriendList()
