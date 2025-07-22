@@ -22,12 +22,21 @@ class FriendsViewControllerVM: ObservableObject {
     @Published var friends: [Friend] = []       // 好友列表
     @Published var inviteFriends: [Friend] = [] // 邀請列表
     
-    var searchText: String = ""
+    @Published var searchText: String = ""
+    
     var filteredFriends: [Friend] {
         if searchText.isEmpty {
             return friends
         } else {
             return friends.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
+        }
+    }
+    
+    var filteredInviteFriends: [Friend] {
+        if searchText.isEmpty {
+            return inviteFriends
+        } else {
+            return inviteFriends.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
         }
     }
     
@@ -39,15 +48,7 @@ class FriendsViewControllerVM: ObservableObject {
     }
     
     func loadScenario() async {
-        await MainActor.run {               // 1. 重置所有狀態（在主線程）
-            isLoading = true
-            errorMessage = nil
-            currentError = nil
-            hasError = false
-            user = nil
-            friends = []
-            inviteFriends = []
-        }
+        await resetState()                  // 1. 重置所有狀態
         
         do {                                // 2. 非同步載入資料
             user = try await APIClient.shared.fetchUserData()
@@ -64,17 +65,9 @@ class FriendsViewControllerVM: ObservableObject {
                 inviteFriends = try await APIClient.shared.fetchFriendListWithInvites()
             }
             
-            await MainActor.run {           // 4. 更新成功狀態
-                isLoading = false
-                hasError = false
-            }
+            await setSuccessState()         // 4. 更新成功狀態
         } catch {
-            await MainActor.run {           // 5. 錯誤處理
-                isLoading = false
-                errorMessage = error.localizedDescription
-                currentError = error
-                hasError = true
-            }
+            await setErrorState(error)      // 5. 錯誤處理
         }
     }
     
@@ -83,25 +76,19 @@ class FriendsViewControllerVM: ObservableObject {
     }
     
     func reloadFriendList() async {
-        await MainActor.run {
-            isLoading = true
-            hasError = false
-            currentError = nil
-            errorMessage = nil
-        }
+        await resetLoadingState()           // 重置載入狀態
         
         do {
             friends = try await APIClient.shared.fetchAndMergeFriendLists()
-            await MainActor.run {
-                isLoading = false
+            
+            // 根據當前場景也重新載入邀請列表
+            if scenario == .friendsWithInvitations {
+                inviteFriends = try await APIClient.shared.fetchFriendListWithInvites()
             }
+            
+            await setSuccessState()         // 設置成功狀態
         } catch {
-            await MainActor.run {
-                isLoading = false
-                errorMessage = error.localizedDescription
-                currentError = error
-                hasError = true
-            }
+            await setErrorState(error)      // 統一錯誤處理
         }
     }
     
@@ -114,98 +101,44 @@ class FriendsViewControllerVM: ObservableObject {
         currentError = nil
         errorMessage = nil
     }
+    
+    // MARK: - Private Helper Methods
+    
+    private func resetState() async {
+        await MainActor.run {
+            isLoading = true
+            errorMessage = nil
+            currentError = nil
+            hasError = false
+            user = nil
+            friends = []
+            inviteFriends = []
+        }
+    }
+    
+    private func resetLoadingState() async {
+        await MainActor.run {
+            isLoading = true
+            hasError = false
+            currentError = nil
+            errorMessage = nil
+        }
+    }
+    
+    private func setSuccessState() async {
+        await MainActor.run {
+            isLoading = false
+            hasError = false
+        }
+    }
+    
+    private func setErrorState(_ error: Error) async {
+        await MainActor.run {
+            isLoading = false
+            errorMessage = error.localizedDescription
+            currentError = error
+            hasError = true
+        }
+    }
 }
 
-struct NetworkInterfaceWrapper {
-    
-    // MARK: - 基本功能
-    static func getAllInterfaceTypes() -> [NWInterface.InterfaceType] {
-        return [.wifi, .cellular, .wiredEthernet, .loopback, .other]
-    }
-    
-    static func getCommonInterfaceTypes() -> [NWInterface.InterfaceType] {
-        return [.wifi, .cellular, .wiredEthernet]
-    }
-    
-    // MARK: - 顯示相關
-    static func getDisplayName(for type: NWInterface.InterfaceType) -> String {
-        switch type {
-        case .wifi:
-            return "Wi-Fi"
-        case .cellular:
-            return "行動網路"
-        case .wiredEthernet:
-            return "乙太網路"
-        case .loopback:
-            return "本地迴路"
-        case .other:
-            return "其他"
-        @unknown default:
-            return "未知網路類型"
-        }
-    }
-    
-    static func getSystemImageName(for type: NWInterface.InterfaceType) -> String {
-        switch type {
-        case .wifi:
-            return "wifi"
-        case .cellular:
-            return "antenna.radiowaves.left.and.right"
-        case .wiredEthernet:
-            return "cable.connector"
-        case .loopback:
-            return "arrow.triangle.2.circlepath"
-        case .other:
-            return "network"
-        @unknown default:
-            return "questionmark.circle"
-        }
-    }
-    
-    // MARK: - 狀態相關
-    static func getStatusColor(for type: NWInterface.InterfaceType, isConnected: Bool) -> UIColor {
-        guard isConnected else { return .systemGray }
-        
-        switch type {
-        case .wifi:
-            return .systemBlue
-        case .cellular:
-            return .systemGreen
-        case .wiredEthernet:
-            return .systemIndigo
-        default:
-            return .systemGray
-        }
-    }
-    
-    // MARK: - 優先級
-    static func getPriority(for type: NWInterface.InterfaceType) -> Int {
-        switch type {
-        case .wiredEthernet:
-            return 100  // 最優先
-        case .wifi:
-            return 90
-        case .cellular:
-            return 50
-        case .loopback:
-            return 10
-        case .other:
-            return 0
-        @unknown default:
-            return 0
-        }
-    }
-    
-    // MARK: - 實用方法
-    static func getBestAvailableInterface(from interfaces: [NWInterface]) -> NWInterface? {
-        return interfaces.max { interface1, interface2 in
-            let priority1 = getPriority(for: interface1.type)
-            let priority2 = getPriority(for: interface2.type)
-            return priority1 < priority2
-        }
-    }
-    
-    static func groupInterfacesByType(_ interfaces: [NWInterface]) -> [NWInterface.InterfaceType: [NWInterface]] {
-        return Dictionary(grouping: interfaces) { $0.type }
-    }
-}
